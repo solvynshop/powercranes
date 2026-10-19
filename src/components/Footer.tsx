@@ -18,7 +18,7 @@ export function Footer() {
                 </svg>
               </span>
               <div>
-                <div className="text-sm font-bold text-white">Power Cranes</div>
+                <img src="/brand/logo-full-dark.png" alt="Power Cranes" className="h-12 w-auto" />
                 <div className="text-[10px] uppercase tracking-[0.18em] text-steel-300/80">SARL AU · Morocco</div>
               </div>
             </div>

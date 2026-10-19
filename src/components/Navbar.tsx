@@ -47,7 +47,7 @@ export function Navbar() {
             <button onClick={() => go('home')} className="group flex items-center gap-2.5">
               <Logo />
               <div className="flex flex-col leading-none text-left">
-                <span className="text-[15px] font-bold tracking-tight text-white">Power Cranes</span>
+                <img src="/brand/logo-full-dark.png" alt="Power Cranes" className="h-12 w-auto" />
                 <span className="text-[10px] font-medium uppercase tracking-[0.18em] text-steel-300/80">
                   SARL AU · Morocco
                 </span>
