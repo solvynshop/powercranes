@@ -1,134 +1,121 @@
-import { ArrowRight, ChevronDown, ShieldCheck, Truck, Globe2 } from 'lucide-react';
-import { images, stats } from '@/lib/content';
-import { useMouseParallax, scrollToId } from '@/lib/hooks';
-import { useLanguage } from '@/lib/i18n';
+import { ArrowRight, CalendarClock, ClipboardCheck, Truck, UserCheck } from 'lucide-react';
+import { useI18n } from '@/i18n';
+import { Crane, Load } from './Crane';
 
-export function Hero() {
-  const mouse = useMouseParallax();
-  const { t } = useLanguage();
+const badgeIcons = [UserCheck, Truck, ClipboardCheck, CalendarClock];
+
+/** Animated vector crane placing a load on a steel frame. Pure SVG + CSS, no images. */
+export function HeroScene({ label }: { label: string }) {
+  const ground = 420;
+  const pivotX = 200;
+  const cs = 1.1;
+  const boomPx = 352;
+  const pivotY = ground - 70 * cs;
+  // Tip trajectory while luffing between 58° and 50°, drawn as a dashed arc.
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const tip = (deg: number) => [pivotX + boomPx * Math.cos(rad(deg)), pivotY - boomPx * Math.sin(rad(deg))];
+  const [x1, y1] = tip(58);
+  const [x2, y2] = tip(50);
+
+  const floors = [364, 308, 252, 196];
+  const cols = [480, 550, 620];
 
   return (
-    <section id="home" className="relative min-h-[100svh] w-full overflow-hidden">
-      {/* Background image */}
-      <div className="absolute inset-0">
-        <img
-          src={images.heroCrane}
-          alt="Industrial tower cranes against a bright sky"
-          className="h-full w-full object-cover scale-110"
-          style={{ transform: `scale(1.1) translate(${mouse.x * -14}px, ${mouse.y * -14}px)` }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-ink-950/85 via-ink-950/65 to-ink-950" />
-        <div className="absolute inset-0 bg-gradient-to-r from-ink-950/80 via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-noise opacity-[0.12] mix-blend-overlay" />
-      </div>
+    <svg viewBox="0 0 640 460" className="h-auto w-full" role="img" aria-label={label} dir="ltr">
+      <defs>
+        <pattern id="hero-hazard" width="28" height="28" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+          <rect width="14" height="28" fill="#F89008" />
+          <rect x="14" width="14" height="28" fill="#08183C" />
+        </pattern>
+      </defs>
 
-      {/* Floating glass orbs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute left-[12%] top-[22%] h-72 w-72 rounded-full bg-steel-500/20 blur-3xl animate-float-slow"
-          style={{ transform: `translate(${mouse.x * 30}px, ${mouse.y * 30}px)` }}
-        />
-        <div
-          className="absolute right-[14%] top-[34%] h-80 w-80 rounded-full bg-amber-500/10 blur-3xl animate-float-slower"
-          style={{ transform: `translate(${mouse.x * -40}px, ${mouse.y * -20}px)` }}
-        />
-      </div>
+      {/* Steel frame under construction */}
+      <g stroke="#3C5E9E" strokeWidth="3" fill="none">
+        {cols.map((x) => (
+          <line key={x} x1={x} y1={ground} x2={x} y2={floors[floors.length - 1]} />
+        ))}
+        {floors.map((y) => (
+          <line key={y} x1={cols[0]} y1={y} x2={cols[cols.length - 1]} y2={y} />
+        ))}
+        <path strokeWidth="2" d="M480 420L550 364M550 364L480 308M550 308L620 364M620 252L550 308M480 252L550 196" />
+      </g>
+      <rect x="480" y="360" width="140" height="6" fill="#173768" />
+      <rect x="480" y="304" width="140" height="6" fill="#173768" />
 
-      {/* Grid overlay */}
-      <div className="absolute inset-0 bg-grid mask-fade-b opacity-40" />
+      {/* Working radius of the boom tip */}
+      <path
+        d={`M${x1} ${y1}A${boomPx} ${boomPx} 0 0 1 ${x2} ${y2}`}
+        fill="none"
+        stroke="#F89008"
+        strokeWidth="2"
+        strokeDasharray="6 7"
+        opacity="0.7"
+      />
 
-      {/* Content */}
-      <div className="relative z-10 mx-auto flex min-h-[100svh] max-w-7xl flex-col justify-center px-4 pt-28 pb-20 sm:px-6">
-        <div className="max-w-3xl">
-          <div
-            className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-xs font-medium text-ink-200 animate-fade-in"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-pulse-ring rounded-full bg-success-400" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-success-400" />
-            </span>
-            {t('heroEyebrow')}
-          </div>
-
-          <h1
-            className="mt-6 text-4xl font-bold leading-[1.05] tracking-tightest text-white sm:text-6xl lg:text-7xl animate-fade-up"
-            style={{ animationDelay: '0.1s' }}
-          >
-            {t('heroTitle1')}
-            <br />
-            <span className="shimmer-text">{t('heroTitle2')}</span>
-            <br />
-            {t('heroTitle3')}
-          </h1>
-
-          <p
-            className="mt-6 max-w-xl text-base leading-relaxed text-ink-200 sm:text-lg animate-fade-up"
-            style={{ animationDelay: '0.25s' }}
-          >
-            {t('heroBody')}
-          </p>
-
-          <div
-            className="mt-9 flex flex-wrap items-center gap-3 animate-fade-up"
-            style={{ animationDelay: '0.4s' }}
-          >
-            <button onClick={() => scrollToId('products')} className="btn-primary">
-              {t('explore')}
-              <ArrowRight className="h-4 w-4" />
-            </button>
-            <button onClick={() => scrollToId('contact')} className="btn-ghost">
-              {t('request')}
-            </button>
-          </div>
-
-          {/* Trust chips */}
-          <div
-            className="mt-12 flex flex-wrap gap-x-8 gap-y-4 animate-fade-up"
-            style={{ animationDelay: '0.55s' }}
-          >
-            {[
-              { icon: ShieldCheck, label: t('compliant') },
-              { icon: Truck, label: t('delivery') },
-              { icon: Globe2, label: t('customs') },
-            ].map((chip) => (
-              <div key={chip.label} className="flex items-center gap-2 text-sm text-ink-300">
-                <chip.icon className="h-4 w-4 text-steel-300" />
-                {chip.label}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Stats bar */}
-      <div className="absolute bottom-0 left-0 right-0 z-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="glass-dark rounded-t-3xl border-b-0 px-6 py-5 sm:px-10 sm:py-6">
-            <dl className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-              {stats.map((s, i) => (
-                <div
-                  key={s.label}
-                  className="text-center sm:text-left animate-fade-up"
-                  style={{ animationDelay: `${0.7 + i * 0.1}s` }}
-                >
-                  <dt className="text-2xl font-bold tracking-tight text-white sm:text-3xl">{s.value}</dt>
-                  <dd className="mt-1 text-xs text-ink-300 sm:text-sm">{s.label}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-        </div>
-      </div>
-
-      {/* Scroll hint */}
-      <button
-        onClick={() => scrollToId('about')}
-        className="absolute left-1/2 top-[88%] z-20 hidden -translate-x-1/2 flex-col items-center gap-1 text-ink-400 transition-colors hover:text-white sm:flex"
-        aria-label="Scroll down"
+      <Crane
+        x={pivotX}
+        ground={ground}
+        cs={cs}
+        axles={5}
+        boomPx={boomPx}
+        angle={58}
+        animate
+        ropeLength={70}
+        tone="dark"
       >
-        <span className="text-[10px] uppercase tracking-[0.25em]">{t('scroll')}</span>
-        <ChevronDown className="h-4 w-4 animate-bounce" />
-      </button>
+        <Load w={64} h={34} sling={26} tone="dark" />
+      </Crane>
+
+      {/* Ground */}
+      <line x1="0" y1={ground} x2="640" y2={ground} stroke="#3C5E9E" strokeWidth="2" />
+      <rect x="0" y={ground + 6} width="640" height="8" fill="url(#hero-hazard)" />
+    </svg>
+  );
+}
+
+export function Hero() {
+  const { t } = useI18n();
+
+  return (
+    <section id="top" className="relative overflow-hidden bg-navy-950 text-white">
+      <div className="blueprint absolute inset-0" aria-hidden="true" />
+      <div className="container-x relative grid items-center gap-8 py-12 sm:py-16 lg:grid-cols-[1.05fr_1fr] lg:gap-6 lg:py-20">
+        <div>
+          <p className="eyebrow text-brand-400">{t.hero.eyebrow}</p>
+          <h1 className="caps-tight mt-5 font-display text-5xl font-extrabold leading-[0.95] sm:text-6xl xl:text-7xl">
+            {t.hero.title} <span className="text-brand-500">{t.hero.accent}</span>
+          </h1>
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-navy-200">{t.hero.sub}</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <a href="#quote" className="btn btn-primary">
+              {t.hero.ctaQuote}
+              <ArrowRight className="h-5 w-5 rtl:-scale-x-100" aria-hidden="true" />
+            </a>
+            <a href="#planner" className="btn btn-outline">
+              {t.hero.ctaPlanner}
+            </a>
+          </div>
+        </div>
+
+        <div className="lg:-me-6">
+          <HeroScene label={t.hero.alt} />
+        </div>
+      </div>
+
+      <div className="hazard h-2" aria-hidden="true" />
+      <div className="relative bg-navy-900">
+        <ul className="container-x grid grid-cols-2 gap-x-6 gap-y-4 py-5 lg:grid-cols-4">
+          {t.hero.badges.map((badge, i) => {
+            const Icon = badgeIcons[i] ?? UserCheck;
+            return (
+              <li key={badge} className="flex items-center gap-3 text-sm font-semibold text-navy-100 sm:text-base">
+                <Icon className="h-5 w-5 shrink-0 text-brand-500" aria-hidden="true" />
+                <span>{badge}</span>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
     </section>
   );
 }

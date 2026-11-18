@@ -3,137 +3,172 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  * {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    @apply bg-ink-950 text-ink-100 font-sans antialiased;
+    @apply bg-white font-sans text-navy-900 antialiased;
     overflow-x: hidden;
   }
 
   ::selection {
-    @apply bg-steel-500/30 text-white;
+    @apply bg-brand-500 text-navy-950;
+  }
+
+  :focus-visible {
+    outline: 3px solid theme('colors.brand.500');
+    outline-offset: 2px;
+  }
+
+  /* Arabic: swap the Latin display/mono faces for Cairo and relax headings. */
+  html[lang='ar'] body,
+  html[lang='ar'] .font-display,
+  html[lang='ar'] .font-mono {
+    font-family: 'Cairo', system-ui, sans-serif;
+  }
+  html[lang='ar'] h1,
+  html[lang='ar'] h2,
+  html[lang='ar'] h3 {
+    line-height: 1.35;
   }
 }
 
 @layer components {
-  /* Glass surface — Apple style */
-  .glass {
-    @apply bg-white/[0.06] backdrop-blur-xl border border-white/[0.08];
-  }
-  .glass-strong {
-    @apply bg-white/[0.1] backdrop-blur-2xl border border-white/[0.12];
-  }
-  .glass-dark {
-    @apply bg-ink-900/60 backdrop-blur-xl border border-white/[0.06];
+  .container-x {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
   }
 
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-ink-300;
+  /* Uppercase + tracking for Latin scripts only (Arabic has no case). */
+  .caps {
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
-  .text-gradient-steel {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-steel-200 via-steel-400 to-steel-600;
+  .caps-tight {
+    text-transform: uppercase;
+    letter-spacing: -0.005em;
   }
-  .text-gradient-amber {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600;
-  }
-
-  /* Reveal-on-scroll */
-  .reveal {
-    opacity: 0;
-    transform: translateY(28px);
-    transition: opacity 0.9s var(--ease-out-quint), transform 0.9s var(--ease-out-quint);
-    will-change: opacity, transform;
-  }
-  .reveal.is-visible {
-    opacity: 1;
-    transform: translateY(0);
+  html[lang='ar'] :is(.caps, .caps-tight, .eyebrow, .btn) {
+    text-transform: none;
+    letter-spacing: 0;
   }
 
+  .eyebrow {
+    @apply inline-flex items-center gap-3 font-mono text-xs font-semibold;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 1.75rem;
+    height: 2px;
+    background: theme('colors.brand.500');
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded px-5 py-3 font-display text-base font-bold transition duration-200;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-steel-500 px-6 py-3 text-sm font-semibold text-white
-           shadow-[0_8px_30px_-8px_rgba(47,131,246,0.7)] transition-all duration-500
-           hover:bg-steel-400 hover:shadow-[0_10px_40px_-6px_rgba(89,164,255,0.85)] hover:-translate-y-0.5;
+    @apply bg-brand-500 text-navy-950 hover:bg-brand-400;
   }
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 py-3 text-sm font-semibold text-white
-           backdrop-blur-md transition-all duration-500 hover:bg-white/[0.1] hover:border-white/25 hover:-translate-y-0.5;
+  .btn-dark {
+    @apply bg-navy-900 text-white hover:bg-navy-700;
   }
-
-  .divider-glow {
-    @apply h-px w-full bg-gradient-to-r from-transparent via-steel-500/40 to-transparent;
+  .btn-outline {
+    @apply border-2 border-white/30 text-white hover:border-brand-500 hover:text-brand-400;
   }
-
-  .card-hover {
-    @apply transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)];
-  }
-  .card-hover:hover {
-    @apply -translate-y-1.5;
+  .btn-outline-dark {
+    @apply border-2 border-navy-900/20 text-navy-900 hover:border-brand-500 hover:text-brand-700;
   }
 
-  /* Marquee container */
-  .marquee-track {
-    @apply flex gap-12 whitespace-nowrap;
-    animation: marquee 38s linear infinite;
-  }
-}
-
-@layer utilities {
-  .bg-grid {
+  /* Engineering-drawing grid, for dark and light sections. */
+  .blueprint {
     background-image:
-      linear-gradient(to right, rgba(255,255,255,0.04) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255,255,255,0.04) 1px, transparent 1px);
-    background-size: 56px 56px;
+      linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
-  .bg-noise {
-    background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
+  .blueprint-light {
+    background-image:
+      linear-gradient(rgba(8, 24, 60, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(8, 24, 60, 0.05) 1px, transparent 1px);
+    background-size: 40px 40px;
   }
-  .mask-fade-b {
-    -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+
+  .hazard {
+    background: repeating-linear-gradient(-45deg, #f89008 0 14px, #08183c 14px 28px);
   }
-  .mask-fade-x {
-    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
-            mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+
+  .field {
+    @apply w-full rounded border border-navy-200 bg-white px-3.5 py-2.5 text-base text-navy-900 placeholder-navy-300 transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30;
   }
-  .shimmer-text {
-    background: linear-gradient(110deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,1) 40%, rgba(89,164,255,1) 50%, rgba(255,255,255,1) 60%, rgba(255,255,255,0.5) 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-            background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: shimmer 4s linear infinite;
-  }
-  .scrollbar-hide::-webkit-scrollbar { display: none; }
-  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: #070a0f; }
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(#1a66e0, #0e274c);
-  border-radius: 999px;
-  border: 2px solid #070a0f;
+/* Reveal on scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
-::-webkit-scrollbar-thumb:hover { background: linear-gradient(#2f83f6, #1551b4); }
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/*
+ * Hero crane: the boom luffs (rotates) around the pivot while the hook block
+ * counter-rotates by the same amount around the boom tip, so the load always
+ * hangs vertically. Both animations share duration and easing.
+ */
+@keyframes crane-luff {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
+@keyframes crane-counter {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-8deg);
+  }
+}
+.crane-luff {
+  transform-origin: 0 0;
+  animation: crane-luff 10s ease-in-out infinite;
+}
+.crane-counter {
+  transform-origin: 0 0;
+  animation: crane-counter 10s ease-in-out infinite;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
+  html {
+    scroll-behavior: auto;
   }
-  .reveal { opacity: 1; transform: none; }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .crane-luff,
+  .crane-counter {
+    animation: none;
+  }
+}
+
+@media print {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
 }
