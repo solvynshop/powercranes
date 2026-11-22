@@ -9,7 +9,7 @@ import type { CraneClass } from './fleet';
 /** The load (incl. rigging) must stay below capacity ÷ this factor. */
 export const SAFETY_FACTOR = 1.25;
 /** Height of the boom foot above ground, in metres. */
-export const PIVOT_H = 3.5;
+export const PIVOT_H = 3.6;
 /** Clearance between boom tip and the placed load (hook block + slings), in metres. */
 export const SLING_H = 3.5;
 /** Boom is never worked flatter than this radius / length ratio (≈ 32° above horizontal). */

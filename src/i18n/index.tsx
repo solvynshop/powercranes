@@ -17,7 +17,17 @@ const STORAGE_KEY = 'powercranes-lang';
 
 const isLang = (value: unknown): value is Lang => value === 'fr' || value === 'en' || value === 'ar';
 
-/** ?lang=en in the URL wins, then the saved choice, then French. */
+/** First supported language among the device's preferred languages (fr-MA, ar-SA, en-US...). */
+function deviceLang(): Lang | null {
+  const prefs = typeof navigator === 'undefined' ? [] : navigator.languages?.length ? navigator.languages : [navigator.language];
+  for (const pref of prefs) {
+    const base = String(pref).toLowerCase().split('-')[0];
+    if (isLang(base)) return base;
+  }
+  return null;
+}
+
+/** ?lang=en in the URL wins, then the visitor's saved choice, then the device language, then French. */
 function initialLang(): Lang {
   try {
     const fromUrl = new URLSearchParams(window.location.search).get('lang');
@@ -25,9 +35,9 @@ function initialLang(): Lang {
     const saved = window.localStorage.getItem(STORAGE_KEY);
     if (isLang(saved)) return saved;
   } catch {
-    /* storage or URL access can be blocked: fall through to the default */
+    /* storage or URL access can be blocked: fall through to the device language */
   }
-  return 'fr';
+  return deviceLang() ?? 'fr';
 }
 
 type I18nValue = {

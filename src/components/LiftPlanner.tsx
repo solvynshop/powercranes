@@ -1,10 +1,9 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { fleet, type CraneClass } from '@/lib/fleet';
-import { PIVOT_H, SAFETY_FACTOR, SLING_H, capacityCurve, evaluateLift, type LiftInput, type LiftResult } from '@/lib/lift';
+import { SAFETY_FACTOR, SLING_H, capacityCurve, evaluateLift, type LiftInput, type LiftResult } from '@/lib/lift';
 import { fmt, useI18n } from '@/i18n';
 import { useQuote } from '@/lib/quote';
-import { Crane, Load, LOCAL_UNITS_PER_METRE } from './Crane';
 import { Reveal, SectionHead } from './Section';
 
 /* ------------------------------------------------------------------ */
@@ -73,37 +72,63 @@ function Slider({ label, unit, value, min, max, onChange }: SliderProps) {
 /* To-scale diagram of the lift                                        */
 /* ------------------------------------------------------------------ */
 
-type SceneProps = { input: LiftInput; result: LiftResult; label: string; unitM: string };
+type SceneProps = { input: LiftInput; result: LiftResult; label: string; unitM: string; unitT: string };
 
-function PlannerScene({ input, result, label, unitM }: SceneProps) {
+/* The carrier photo (public/brand/carrier-100t.webp, 900 × 336) faces right. Its real size is
+   ~13.2 m long; the boom foot sits at (11.9 %, 17 %) of the picture and the tyres touch the ground at 89.3 % of its height. */
+const CARRIER = { w: 13.2, ratio: 336 / 900, pivotX: 0.119, pivotY: 0.17, groundY: 0.893 };
+
+function PlannerScene({ input, result, label, unitM, unitT }: SceneProps) {
   const W = 720;
   const H = 400;
   const ground = 350;
   const pivotX = 150;
-  const { radius, height } = input;
+  const { radius, height, load } = input;
 
-  const crane: CraneClass | undefined = (result.recommended ?? result.options[result.options.length - 1])?.crane;
   const L = result.boomNeeded;
-  const sinA = Math.sqrt(Math.max(1 - (radius / L) ** 2, 0));
+  const rise = Math.sqrt(Math.max(L * L - radius * radius, 0));
 
   // px per metre, limited so the whole lift fits and the crane body stays on screen.
   const s = Math.min((W - pivotX - 80) / (radius + 12), (ground - 36) / (height + SLING_H + 5), 14);
-  const cs = s / LOCAL_UNITS_PER_METRE;
 
-  // Drop from the boom tip to the underside of the load, in metres, converted to rope length.
-  const dropM = PIVOT_H + L * sinA - height;
-  const ropeLength = Math.max(dropM * LOCAL_UNITS_PER_METRE - 56, 6);
+  const imgW = CARRIER.w * s;
+  const imgH = imgW * CARRIER.ratio;
+  const imgX = pivotX - CARRIER.pivotX * imgW;
+  const imgY = ground - CARRIER.groundY * imgH;
+  const pivotY = imgY + CARRIER.pivotY * imgH;
 
-  const targetX = pivotX + radius * s;
+  const tipX = pivotX + radius * s;
+  const tipY = pivotY - rise * s;
+  const ux = (tipX - pivotX) / (L * s);
+  const uy = (tipY - pivotY) / (L * s);
+  // Boom as a tapered polygon (0.9 m at the foot, 0.45 m at the head).
+  const half0 = 0.45 * s;
+  const half1 = 0.22 * s;
+  const nx = -uy;
+  const ny = ux;
+  const pts = [
+    [pivotX + nx * half0, pivotY + ny * half0],
+    [tipX + nx * half1, tipY + ny * half1],
+    [tipX - nx * half1, tipY - ny * half1],
+    [pivotX - nx * half0, pivotY - ny * half0],
+  ]
+    .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
+    .join(' ');
+
+  // Load hangs from the boom head: block, then slings, then the load itself.
   const topY = ground - height * s;
-  const wallX = targetX + 1.6 * s;
+  const loadH = Math.min(1.9 * s, 40);
+  const loadW = Math.min(3.2 * s, 70);
+  const loadTop = topY - loadH;
+  const blockY = Math.min(loadTop - 1.1 * s, loadTop - 6);
+  const wallX = tipX + 2.2 * s;
   const wallW = Math.max(W - 72 - wallX, 24);
   const dimX = W - 32;
   const dimY = ground + 24;
 
   const Pill = ({ x, y, text }: { x: number; y: number; text: string }) => (
     <g>
-      <rect x={x - 38} y={y - 12} width="76" height="22" rx="3" fill="#040D25" stroke="#F89008" strokeWidth="1" />
+      <rect x={x - 38} y={y - 12} width="76" height="22" rx="11" fill="#040D25" stroke="#F89008" strokeWidth="1" />
       <text x={x} y={y + 4} textAnchor="middle" fontSize="13" fontWeight="600" fill="#FFD08A" fontFamily="'JetBrains Mono', monospace">
         {text}
       </text>
@@ -112,36 +137,47 @@ function PlannerScene({ input, result, label, unitM }: SceneProps) {
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={label} dir="ltr">
+      <defs>
+        <linearGradient id="boom-grad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFB23A" />
+          <stop offset="0.55" stopColor="#F89008" />
+          <stop offset="1" stopColor="#B85F00" />
+        </linearGradient>
+      </defs>
+
       {/* Structure the load is placed against */}
       <rect x={wallX} y={topY} width={wallW} height={ground - topY} fill="#0C2552" stroke="#3C5E9E" strokeWidth="1.5" />
       <line x1={wallX} y1={topY} x2={wallX + wallW} y2={topY} stroke="#F89008" strokeWidth="2" strokeDasharray="5 5" />
 
       {/* Height dimension */}
-      <line x1={targetX} y1={topY} x2={dimX} y2={topY} stroke="#F89008" strokeWidth="1" strokeDasharray="3 4" opacity="0.7" />
+      <line x1={tipX} y1={topY} x2={dimX} y2={topY} stroke="#F89008" strokeWidth="1" strokeDasharray="3 4" opacity="0.7" />
       <line x1={dimX} y1={ground} x2={dimX} y2={topY} stroke="#F89008" strokeWidth="1.5" />
       <line x1={dimX - 5} y1={ground} x2={dimX + 5} y2={ground} stroke="#F89008" strokeWidth="1.5" />
       <line x1={dimX - 5} y1={topY} x2={dimX + 5} y2={topY} stroke="#F89008" strokeWidth="1.5" />
       <Pill x={dimX - 6} y={(ground + topY) / 2} text={`H ${height} ${unitM}`} />
 
-      <Crane
-        x={pivotX}
-        ground={ground}
-        cs={cs}
-        axles={crane?.axles ?? 4}
-        boomPx={L * s}
-        angle={result.angle}
-        ropeLength={ropeLength}
-        tone="dark"
-      >
-        <Load w={36} h={22} sling={14} tone="dark" />
-      </Crane>
+      {/* Boom (drawn behind the carrier so the turret covers its foot) */}
+      <polygon points={pts} fill="url(#boom-grad)" stroke="#7A3F00" strokeWidth="1" strokeLinejoin="round" />
+      <circle cx={tipX} cy={tipY} r={Math.max(half1 * 1.25, 3)} fill="#08183C" stroke="#F89008" strokeWidth="1.5" />
+
+      {/* Rope, hook block, slings and load */}
+      <line x1={tipX} y1={tipY} x2={tipX} y2={blockY} stroke="#E8EDF8" strokeWidth="1.5" />
+      <rect x={tipX - 5} y={blockY} width="10" height="12" rx="2" fill="#D6342C" />
+      <path d={`M${tipX} ${blockY + 12}L${tipX - loadW / 2} ${loadTop}M${tipX} ${blockY + 12}L${tipX + loadW / 2} ${loadTop}`} stroke="#E8EDF8" strokeWidth="1" fill="none" />
+      <rect x={tipX - loadW / 2} y={loadTop} width={loadW} height={loadH} fill="#5C6F96" stroke="#E8EDF8" strokeWidth="1.5" />
+      <text x={tipX} y={loadTop + loadH / 2 + 4} textAnchor="middle" fontSize={Math.min(13, loadH * 0.5)} fontWeight="700" fill="#fff" fontFamily="'JetBrains Mono', monospace">
+        {load} {unitT}
+      </text>
+
+      {/* The real crane */}
+      <image href="/brand/carrier-100t.webp" x={imgX} y={imgY} width={imgW} height={imgH} preserveAspectRatio="xMidYMid meet" />
 
       {/* Ground + radius dimension */}
       <line x1="0" y1={ground} x2={W} y2={ground} stroke="#3C5E9E" strokeWidth="2" />
-      <line x1={pivotX} y1={dimY} x2={targetX} y2={dimY} stroke="#F89008" strokeWidth="1.5" />
+      <line x1={pivotX} y1={dimY} x2={tipX} y2={dimY} stroke="#F89008" strokeWidth="1.5" />
       <line x1={pivotX} y1={dimY - 5} x2={pivotX} y2={dimY + 5} stroke="#F89008" strokeWidth="1.5" />
-      <line x1={targetX} y1={dimY - 5} x2={targetX} y2={dimY + 5} stroke="#F89008" strokeWidth="1.5" />
-      <Pill x={(pivotX + targetX) / 2} y={dimY} text={`R ${radius} ${unitM}`} />
+      <line x1={tipX} y1={dimY - 5} x2={tipX} y2={dimY + 5} stroke="#F89008" strokeWidth="1.5" />
+      <Pill x={(pivotX + tipX) / 2} y={dimY} text={`R ${radius} ${unitM}`} />
     </svg>
   );
 }
@@ -168,7 +204,7 @@ function LoadChart({ crane, input, radiusAxis, capacityAxis }: ChartProps) {
   const xTicks = Array.from({ length: xMax / 10 + 1 }, (_, i) => i * 10);
   const yTicks = [0, Math.round(yMax / 2), yMax];
   const px = x(input.radius);
-  const py = y(input.load);
+  const py = Math.max(y(input.load), pad.t);
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={`${capacityAxis} / ${radiusAxis}`} dir="ltr">
@@ -223,15 +259,15 @@ export function LiftPlanner() {
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
           <Reveal className="space-y-7 rounded-lg border border-white/10 bg-navy-900/80 p-5 sm:p-6">
-            <Slider label={t.planner.load} unit={t.units.t} value={input.load} min={1} max={300} onChange={(load) => set({ load })} />
-            <Slider label={t.planner.radius} unit={m} value={input.radius} min={3} max={60} onChange={(radius) => set({ radius })} />
-            <Slider label={t.planner.height} unit={m} value={input.height} min={0} max={80} onChange={(height) => set({ height })} />
+            <Slider label={t.planner.load} unit={t.units.t} value={input.load} min={1} max={120} onChange={(load) => set({ load })} />
+            <Slider label={t.planner.radius} unit={m} value={input.radius} min={3} max={44} onChange={(radius) => set({ radius })} />
+            <Slider label={t.planner.height} unit={m} value={input.height} min={0} max={50} onChange={(height) => set({ height })} />
             <p className="border-t border-white/10 pt-4 text-sm leading-relaxed text-navy-300">{t.planner.disclaimer}</p>
           </Reveal>
 
           <Reveal delay={100} className="min-w-0 space-y-4">
             <div className="rounded-lg border border-white/10 bg-navy-900/80 p-3 sm:p-4">
-              <PlannerScene input={input} result={result} label={t.planner.sceneAlt} unitM={m} />
+              <PlannerScene input={input} result={result} label={t.planner.sceneAlt} unitM={m} unitT={t.units.t} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2" aria-live="polite">
@@ -299,11 +335,7 @@ export function LiftPlanner() {
               <div className="rounded-lg border border-white/10 bg-navy-900/80 p-5">
                 <p className="caps font-mono text-xs font-semibold text-brand-400">{t.planner.chart}</p>
                 <div className="mt-3">
-                  {rec ? (
-                    <LoadChart crane={rec.crane} input={input} radiusAxis={t.planner.radiusAxis} capacityAxis={t.planner.capacityAxis} />
-                  ) : (
-                    <div className="flex h-40 items-center justify-center text-center text-sm text-navy-300">—</div>
-                  )}
+                  <LoadChart crane={fleet[0]} input={input} radiusAxis={t.planner.radiusAxis} capacityAxis={t.planner.capacityAxis} />
                 </div>
               </div>
             </div>
