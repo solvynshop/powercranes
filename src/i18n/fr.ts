@@ -4,9 +4,9 @@
  */
 export const fr = {
   meta: {
-    title: 'Location de grues mobiles à Tanger et partout au Maroc | Power Cranes',
+    title: 'Location longue durée de grue mobile 100 t au Maroc | Power Cranes',
     description:
-      'Power Cranes loue des grues mobiles avec opérateur à Tanger et partout au Maroc. Décrivez votre levage, nous vous recommandons la grue adaptée et vous envoyons un devis.',
+      'Power Cranes loue une grue mobile de 100 tonnes avec opérateur, en location longue durée (à partir de 3 mois), partout au Maroc. Demandez votre devis.',
   },
   units: { t: 't', m: 'm' },
   nav: {
@@ -24,7 +24,7 @@ export const fr = {
   hero: {
     eyebrow: 'Location de grues mobiles · Tanger, Maroc',
     title: 'Location de grues mobiles',
-    accent: 'à Tanger et partout au Maroc',
+    accent: 'partout au Maroc',
     sub: 'Dites-nous votre levage : charge, portée, hauteur. Nous vous recommandons la grue adaptée et vous envoyons un devis, opérateur qualifié inclus.',
     ctaQuote: 'Demander un devis',
     ctaPlanner: 'Calculer mon levage',
@@ -32,7 +32,7 @@ export const fr = {
       'Opérateur qualifié inclus',
       'Livraison sur chantier',
       'Plan de levage sur demande',
-      'À la demi-journée, au jour ou au mois',
+      'Location longue durée, dès 3 mois',
     ],
     alt: 'Grue mobile Power Cranes de 100 tonnes',
   },
@@ -87,9 +87,9 @@ export const fr = {
       { title: 'Opérateur qualifié inclus', text: 'Chaque grue est louée avec son opérateur expérimenté.' },
       { title: 'Livraison et mise en place', text: 'Transport, positionnement et calage sur votre site.' },
       { title: 'Plan de levage', text: 'Analyse du site, du sol et de la charge avant toute opération.' },
-      { title: 'Durées flexibles', text: 'De la demi-journée à plusieurs mois, selon votre chantier.' },
+      { title: 'Location longue durée', text: 'Contrats à partir de 3 mois, pour les projets qui ont besoin d’une grue sur la durée.' },
       { title: 'Accessoires d’élingage', text: 'Élingues, manilles et palonniers disponibles sur demande.' },
-      { title: 'Intervention nationale', text: 'Basés à Tanger, nous nous déplaçons partout au Maroc.' },
+      { title: 'Tout le Maroc', text: 'Notre grue est livrée sur tout site du Royaume.' },
     ],
   },
   process: {
@@ -128,8 +128,8 @@ export const fr = {
   },
   coverage: {
     tag: 'Zones d’intervention',
-    title: 'Basés à Tanger, présents partout au Maroc',
-    text: 'Notre siège est à Tanger-Médina, au cœur du nord logistique du Royaume. Nos grues se déplacent sur tout le territoire, de Tanger-Med à Casablanca.',
+    title: 'Disponibles dans tout le Maroc',
+    text: 'Notre siège est à Tanger, mais notre grue est louée pour des projets partout dans le Royaume, de Tanger-Med à Casablanca et au-delà.',
     cities: ['Tanger', 'Tanger-Med', 'Tétouan', 'Larache', 'Kénitra', 'Rabat', 'Casablanca', 'Fès'],
     hq: 'Siège',
   },
@@ -148,8 +148,8 @@ export const fr = {
     radius: 'Portée (m)',
     height: 'Hauteur (m)',
     date: 'Date de début',
-    duration: 'Durée',
-    durations: { half: 'Demi-journée', day: '1 jour', week: '1 semaine', month: '1 mois ou plus' },
+    duration: 'Durée de location (min. 3 mois)',
+    durations: { m3: '3 mois', m6: '6 mois', m12: '12 mois', m12plus: 'Plus de 12 mois' },
     message: 'Détails du chantier',
     messagePh: 'Nature de la charge, accès au site, contraintes…',
     required: 'Champ obligatoire',
@@ -204,7 +204,7 @@ export const fr = {
     mapTitle: 'Carte : Power Cranes à Tanger',
   },
   footer: {
-    tagline: 'Location de grues mobiles à Tanger et partout au Maroc.',
+    tagline: 'Location longue durée de grue mobile, partout au Maroc.',
     nav: 'Navigation',
     contact: 'Contact',
     rights: 'Tous droits réservés.',

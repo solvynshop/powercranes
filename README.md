@@ -31,3 +31,12 @@ SEO : titres/descriptions par page (`src/lib/meta.ts`), `robots.txt`, `sitemap.x
 - `src/i18n/*` — textes ; l'arabe doit être relu par un locuteur natif.
 - `src/lib/lift.ts` — modèle de levage **indicatif**, ne remplace pas un plan de levage.
 - Pages légales : à faire valider par un juriste.
+
+## Hébergement sur le serveur du client (Apache / cPanel)
+1. Créer un fichier `.env.production` (non versionné) avec `VITE_FORM_ENDPOINT=https://formspree.io/f/XXXX` (et `VITE_GA_ID` si besoin). Ces valeurs sont intégrées au moment du build.
+2. `npm run build`
+3. Envoyer **le contenu** du dossier `dist/` (y compris `.htaccess`) dans `public_html/`.
+4. Activer le HTTPS (certificat SSL gratuit dans cPanel).
+
+## Offre affichée
+Grue mobile 100 t, location **longue durée uniquement (à partir de 3 mois)**, partout au Maroc.

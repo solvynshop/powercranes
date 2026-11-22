@@ -7,7 +7,7 @@ import { Link, useRouter } from '@/lib/router';
 import { useI18n } from '@/i18n';
 import { Reveal, SectionHead } from './Section';
 
-type Duration = '' | 'half' | 'day' | 'week' | 'month';
+type Duration = '' | 'm3' | 'm6' | 'm12' | 'm12plus';
 type Channel = 'form' | 'whatsapp' | 'email';
 type FieldKey = 'name' | 'phone' | 'email' | 'consent';
 

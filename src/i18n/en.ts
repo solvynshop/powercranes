@@ -2,9 +2,9 @@ import type { Dict } from './fr';
 
 export const en: Dict = {
   meta: {
-    title: 'Mobile crane rental in Tangier and across Morocco | Power Cranes',
+    title: 'Long-term 100 t mobile crane rental across Morocco | Power Cranes',
     description:
-      'Power Cranes rents mobile cranes with operator in Tangier and across Morocco. Describe your lift, we recommend the right crane and send you a quote.',
+      'Power Cranes rents a 100-tonne mobile crane with operator on long-term contracts (from 3 months), anywhere in Morocco. Request your quote.',
   },
   units: { t: 't', m: 'm' },
   nav: {
@@ -20,17 +20,17 @@ export const en: Dict = {
     language: 'Language',
   },
   hero: {
-    eyebrow: 'Mobile crane rental · Tangier, Morocco',
-    title: 'Mobile crane rental',
-    accent: 'in Tangier and across Morocco',
-    sub: 'Tell us about your lift: load, reach, height. We recommend the right crane and send you a quote, qualified operator included.',
+    eyebrow: 'Long-term crane rental · All of Morocco',
+    title: 'Long-term mobile crane rental',
+    accent: 'anywhere in Morocco',
+    sub: '100-tonne mobile crane with qualified operator, rented long term (from 3 months) and delivered to your site anywhere in Morocco. Tell us about your project and get your quote.',
     ctaQuote: 'Request a quote',
     ctaPlanner: 'Plan my lift',
     badges: [
       'Qualified operator included',
       'Delivered to your site',
       'Lift plan on request',
-      'Half-day, daily or monthly hire',
+      'Long-term rental, from 3 months',
     ],
     alt: 'Power Cranes 100-tonne mobile crane',
   },
@@ -85,9 +85,9 @@ export const en: Dict = {
       { title: 'Qualified operator included', text: 'Every crane is rented with its experienced operator.' },
       { title: 'Delivery and set-up', text: 'Transport, positioning and levelling on your site.' },
       { title: 'Lift plan', text: 'Site, ground and load are analysed before any operation.' },
-      { title: 'Flexible durations', text: 'From half a day to several months, to suit your project.' },
+      { title: 'Long-term rental', text: 'Contracts start at 3 months, for projects that need a crane on site over time.' },
       { title: 'Rigging accessories', text: 'Slings, shackles and spreader beams available on request.' },
-      { title: 'Nationwide service', text: 'Based in Tangier, we travel anywhere in Morocco.' },
+      { title: 'All of Morocco', text: 'Our crane is delivered to any site in the country.' },
     ],
   },
   process: {
@@ -126,8 +126,8 @@ export const en: Dict = {
   },
   coverage: {
     tag: 'Where we work',
-    title: 'Based in Tangier, working across Morocco',
-    text: 'Our head office is in Tangier-Médina, in the logistics heart of the north. Our cranes travel across the whole country, from Tanger-Med to Casablanca.',
+    title: 'Available across all of Morocco',
+    text: 'Our head office is in Tangier, but our crane is rented for projects anywhere in the Kingdom, from Tanger-Med to Casablanca and beyond.',
     cities: ['Tangier', 'Tanger-Med', 'Tetouan', 'Larache', 'Kenitra', 'Rabat', 'Casablanca', 'Fes'],
     hq: 'HQ',
   },
@@ -135,7 +135,7 @@ export const en: Dict = {
     tag: 'Quote',
     title: 'Request your quote',
     intro:
-      'The more precise your request, the faster our reply. The planner already fills in part of the form for you.',
+      'Rentals are long term only (minimum 3 months). The more precise your request, the faster our reply.',
     name: 'Full name',
     phone: 'Phone',
     company: 'Company',
@@ -146,8 +146,8 @@ export const en: Dict = {
     radius: 'Reach (m)',
     height: 'Height (m)',
     date: 'Start date',
-    duration: 'Duration',
-    durations: { half: 'Half day', day: '1 day', week: '1 week', month: '1 month or more' },
+    duration: 'Rental duration (min. 3 months)',
+    durations: { m3: '3 months', m6: '6 months', m12: '12 months', m12plus: 'More than 12 months' },
     message: 'Site details',
     messagePh: 'Type of load, site access, constraints…',
     required: 'Required field',
