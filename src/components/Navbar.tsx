@@ -1,23 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { LANGS, useI18n } from '@/i18n';
 import { useActiveSection } from '@/lib/hooks';
 import { navIds } from '@/lib/nav';
+import { Link, useRouter } from '@/lib/router';
 import { Logo } from './Logo';
 
-/** 0 → 1 while the page scrolls, plus whether we've left the top of the page. */
-function useScroll() {
-  const [state, setState] = useState({ progress: 0, scrolled: false });
+/** Tracks "scrolled" (state, changes rarely) and drives the progress bar directly through a ref (no re-render). */
+function useScroll(bar: React.RefObject<HTMLDivElement>) {
+  const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const onScroll = () => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
       const max = document.documentElement.scrollHeight - window.innerHeight;
-      setState({ progress: max > 0 ? Math.min(window.scrollY / max, 1) : 0, scrolled: window.scrollY > 24 });
+      const progress = max > 0 ? Math.min(window.scrollY / max, 1) : 0;
+      if (bar.current) bar.current.style.transform = `scaleX(${progress})`;
+      setScrolled(window.scrollY > 24);
     };
-    onScroll();
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    update();
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-  return state;
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [bar]);
+  return scrolled;
 }
 
 function LangSwitch({ className = '' }: { className?: string }) {
@@ -46,7 +57,11 @@ export function Navbar() {
   const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const active = useActiveSection([...navIds]);
-  const { progress, scrolled } = useScroll();
+  const bar = useRef<HTMLDivElement>(null);
+  const scrolled = useScroll(bar);
+  const { path } = useRouter();
+  // Secondary pages have a light background: the bar is always the dark glass there.
+  const solid = scrolled || open || path !== '/';
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
@@ -66,35 +81,35 @@ export function Navbar() {
         <div className="mx-auto max-w-7xl px-3 sm:px-6">
           <nav
             aria-label="Main"
-            className={`flex items-center justify-between gap-3 rounded-full py-2 ps-4 pe-2.5 transition-all duration-500 sm:ps-5 ${
-              scrolled || open ? 'glass-dark shadow-[0_20px_60px_-25px_rgba(0,0,0,0.75)]' : 'border border-transparent bg-transparent'
+            className={`flex items-center justify-between gap-3 rounded-full py-1.5 ps-4 pe-2.5 transition-all duration-500 sm:ps-5 ${
+              solid ? 'glass-dark shadow-[0_20px_60px_-25px_rgba(0,0,0,0.75)]' : 'border border-transparent bg-transparent'
             }`}
           >
-            <a href="#top" aria-label="Power Cranes" onClick={() => setOpen(false)} className="shrink-0">
-              <Logo className="h-10 sm:h-11" />
-            </a>
+            <Link to="/" aria-label="Power Cranes" onClick={() => setOpen(false)} className="shrink-0">
+              <Logo className="h-11 sm:h-12" />
+            </Link>
 
             <ul className="hidden items-center gap-1 lg:flex">
               {navIds.map((id) => (
                 <li key={id}>
-                  <a
-                    href={`#${id}`}
+                  <Link
+                    to={`/#${id}`}
                     aria-current={active === id ? 'true' : undefined}
                     className={`rounded-full px-4 py-2 text-[15px] font-semibold transition-all duration-300 ${
                       active === id ? 'bg-white/10 text-white' : 'text-navy-100 hover:bg-white/[0.06] hover:text-white'
                     }`}
                   >
                     {t.nav[id]}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
 
             <div className="flex items-center gap-2">
               <LangSwitch />
-              <a href="#quote" className="btn btn-primary hidden !rounded-full !px-5 !py-2.5 sm:inline-flex">
+              <Link to="/#quote" className="btn btn-primary hidden !rounded-full !px-5 !py-2.5 sm:inline-flex">
                 {t.nav.quote}
-              </a>
+              </Link>
               <button
                 type="button"
                 className="glass flex h-10 w-10 items-center justify-center rounded-full text-white lg:hidden"
@@ -109,7 +124,7 @@ export function Navbar() {
           </nav>
 
           <div className="mx-6 mt-2 h-px overflow-hidden rounded-full bg-white/5" aria-hidden="true">
-            <div className="h-full bg-gradient-to-r from-brand-600 to-brand-300" style={{ width: `${progress * 100}%` }} />
+            <div ref={bar} className="h-full origin-left bg-gradient-to-r from-brand-600 to-brand-300 rtl:origin-right" style={{ transform: 'scaleX(0)' }} />
           </div>
         </div>
       </header>
@@ -124,20 +139,20 @@ export function Navbar() {
         <ul className="container-x pb-10">
           {navIds.map((id) => (
             <li key={id}>
-              <a
-                href={`#${id}`}
+              <Link
+                to={`/#${id}`}
                 onClick={() => setOpen(false)}
                 tabIndex={open ? 0 : -1}
                 className="block border-b border-white/10 py-4 font-display text-3xl font-bold text-white"
               >
                 {t.nav[id]}
-              </a>
+              </Link>
             </li>
           ))}
           <li className="pt-6">
-            <a href="#quote" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1} className="btn btn-primary w-full !rounded-full">
+            <Link to="/#quote" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1} className="btn btn-primary w-full !rounded-full">
               {t.nav.quote}
-            </a>
+            </Link>
           </li>
         </ul>
       </div>

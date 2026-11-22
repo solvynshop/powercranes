@@ -1,16 +1,20 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
-import { Mail, MessageCircle, X } from 'lucide-react';
+import { Loader2, Mail, MessageCircle, Phone, Send, X } from 'lucide-react';
 import { fleet, fleetById } from '@/lib/fleet';
 import { mailLink, phoneHref, site, waLink } from '@/lib/config';
 import { useQuote } from '@/lib/quote';
+import { Link, useRouter } from '@/lib/router';
 import { useI18n } from '@/i18n';
 import { Reveal, SectionHead } from './Section';
 
 type Duration = '' | 'half' | 'day' | 'week' | 'month';
+type Channel = 'form' | 'whatsapp' | 'email';
+type FieldKey = 'name' | 'phone' | 'email' | 'consent';
 
 type FormState = {
   name: string;
   phone: string;
+  email: string;
   company: string;
   city: string;
   crane: string;
@@ -20,11 +24,15 @@ type FormState = {
   date: string;
   duration: Duration;
   details: string;
+  consent: boolean;
+  /** Honeypot: real visitors never see or fill it. */
+  website: string;
 };
 
 const empty: FormState = {
   name: '',
   phone: '',
+  email: '',
   company: '',
   city: '',
   crane: '',
@@ -34,21 +42,31 @@ const empty: FormState = {
   date: '',
   duration: '',
   details: '',
+  consent: false,
+  website: '',
 };
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export function Quote() {
   const { t } = useI18n();
   const { draft, setDraft } = useQuote();
+  const { navigate } = useRouter();
   const [form, setForm] = useState<FormState>(empty);
   const [attempted, setAttempted] = useState(false);
-  const nameRef = useRef<HTMLInputElement>(null);
-  const phoneRef = useRef<HTMLInputElement>(null);
+  const [status, setStatus] = useState<'idle' | 'sending' | 'failed'>('idle');
+  const refs = {
+    name: useRef<HTMLInputElement>(null),
+    phone: useRef<HTMLInputElement>(null),
+    email: useRef<HTMLInputElement>(null),
+    consent: useRef<HTMLInputElement>(null),
+  };
   const uid = useId();
   const id = (key: string) => `${uid}-${key}`;
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm((f) => ({ ...f, [key]: value }));
 
-  // Pick up a lift sent from the planner, or a crane chosen on a fleet card.
+  // Pick up a lift sent from the planner, or a crane chosen on the fleet card.
   useEffect(() => {
     if (!draft) return;
     setForm((f) => ({
@@ -64,6 +82,14 @@ export function Quote() {
     setDraft(null);
     setForm((f) => ({ ...f, load: '', radius: '', height: '' }));
   };
+
+  const errors: Partial<Record<FieldKey, string>> = {};
+  if (form.name.trim().length < 2) errors.name = t.quote.errors.name;
+  if (form.phone.replace(/\D/g, '').length < 8) errors.phone = t.quote.errors.phone;
+  if (form.email.trim() && !EMAIL_RE.test(form.email.trim())) errors.email = t.quote.errors.email;
+  if (!form.consent) errors.consent = t.quote.errors.consent;
+  const errorKeys = Object.keys(errors) as FieldKey[];
+  const shown = (key: FieldKey) => (attempted ? errors[key] : undefined);
 
   const buildMessage = (): string => {
     const m = t.quote.msg;
@@ -86,48 +112,102 @@ export function Quote() {
     return lines.join('\n');
   };
 
-  const send = (channel: 'whatsapp' | 'email') => {
+  const finish = (via: Channel) => {
+    setDraft(null);
+    setForm(empty);
+    setAttempted(false);
+    setStatus('idle');
+    navigate(`/thank-you?via=${via}`);
+  };
+
+  const send = async (channel: Channel) => {
     setAttempted(true);
-    if (!form.name.trim()) return nameRef.current?.focus();
-    if (!form.phone.trim()) return phoneRef.current?.focus();
+    if (errorKeys.length) {
+      refs[errorKeys[0]].current?.focus();
+      return;
+    }
+    if (form.website) return finish(channel); // honeypot filled: a bot. Pretend success, send nothing.
 
     const text = buildMessage();
-    if (channel === 'whatsapp' && site.whatsapp) {
+    if (channel === 'whatsapp') {
       window.open(waLink(text), '_blank', 'noopener,noreferrer');
-    } else {
+      return finish('whatsapp');
+    }
+    if (channel === 'email') {
       window.location.href = mailLink(t.quote.mailSubject, text);
+      return finish('email');
+    }
+
+    setStatus('sending');
+    try {
+      const response = await fetch(site.formEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          _subject: t.quote.mailSubject,
+          name: form.name.trim(),
+          phone: form.phone.trim(),
+          email: form.email.trim(),
+          _replyto: form.email.trim(),
+          company: form.company.trim(),
+          city: form.city.trim(),
+          message: text,
+        }),
+      });
+      if (!response.ok) throw new Error(String(response.status));
+      finish('form');
+    } catch {
+      setStatus('failed');
     }
   };
 
   const onSubmit = (e: FormEvent) => {
     e.preventDefault();
-    send(site.whatsapp ? 'whatsapp' : 'email');
+    void send(primary);
   };
 
-  const nameError = attempted && !form.name.trim();
-  const phoneError = attempted && !form.phone.trim();
+  const hasForm = Boolean(site.formEndpoint);
+  const hasWa = Boolean(site.whatsapp);
+  const primary: Channel = hasForm ? 'form' : hasWa ? 'whatsapp' : 'email';
+  const secondary = (['whatsapp', 'email'] as const).filter((c) => c !== primary && (c !== 'whatsapp' || hasWa));
+  const channelLabel: Record<Channel, string> = { form: t.quote.submit, whatsapp: t.quote.sendWhatsApp, email: t.quote.sendEmail };
+  const channelIcon = { form: Send, whatsapp: MessageCircle, email: Mail } as const;
+  const hint = primary === 'form' ? t.quote.hintForm : primary === 'whatsapp' ? t.quote.hintWhatsApp : t.quote.hintEmail;
+  const PrimaryIcon = channelIcon[primary];
+  const sending = status === 'sending';
+
   const label = 'caps mb-1.5 block font-mono text-[11px] font-semibold text-navy-500';
+  const fieldClass = (key: FieldKey) => `field ${shown(key) ? '!border-red-500 !ring-2 !ring-red-500/20' : ''}`;
   const hasPlannerData = Boolean(draft && draft.load !== undefined);
+
+  const FieldError = ({ field }: { field: FieldKey }) =>
+    shown(field) ? (
+      <p id={id(`${field}-err`)} className="mt-1 text-sm font-medium text-red-700">
+        {errors[field]}
+      </p>
+    ) : null;
+  const a11y = (field: FieldKey) => ({ 'aria-invalid': Boolean(shown(field)), 'aria-describedby': shown(field) ? id(`${field}-err`) : undefined });
 
   return (
     <section id="quote" className="bg-paper py-16 sm:py-24">
       <div className="container-x grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
         <div>
           <SectionHead index="08" tag={t.quote.tag} title={t.quote.title} intro={t.quote.intro} className="!mb-8" />
+          <p className="caps mb-3 font-mono text-xs font-semibold text-navy-500">{t.quote.alt}</p>
           <ul className="space-y-3 text-lg font-semibold text-navy-900">
+            {site.phone && (
+              <li>
+                <a href={phoneHref} className="inline-flex items-center gap-2 hover:text-brand-700" dir="ltr">
+                  <Phone className="h-5 w-5 text-brand-600" aria-hidden="true" />
+                  {site.phone}
+                </a>
+              </li>
+            )}
             {site.whatsapp && (
               <li>
                 <a href={waLink()} className="inline-flex items-center gap-2 hover:text-brand-700" target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="h-5 w-5 text-brand-600" aria-hidden="true" />
                   {t.contact.whatsapp}
-                </a>
-              </li>
-            )}
-            {site.phone && (
-              <li>
-                <a href={phoneHref} className="inline-flex items-center gap-2 hover:text-brand-700" dir="ltr">
-                  <span className="sr-only">{t.contact.phone}</span>
-                  {site.phone}
                 </a>
               </li>
             )}
@@ -157,26 +237,35 @@ export function Quote() {
               </div>
             )}
 
+            {attempted && errorKeys.length > 0 && (
+              <p role="alert" className="mb-5 rounded border border-red-300 bg-red-50 px-3.5 py-2.5 text-sm font-semibold text-red-800">
+                {t.quote.errors.summary}
+              </p>
+            )}
+            {status === 'failed' && (
+              <p role="alert" className="mb-5 rounded border border-red-300 bg-red-50 px-3.5 py-2.5 text-sm font-semibold text-red-800">
+                {t.quote.errors.send}{' '}
+                <a href={`mailto:${site.email}`} className="underline" dir="ltr">
+                  {site.email}
+                </a>
+                {site.phone && (
+                  <>
+                    {' · '}
+                    <a href={phoneHref} className="underline" dir="ltr">
+                      {site.phone}
+                    </a>
+                  </>
+                )}
+              </p>
+            )}
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label htmlFor={id('name')} className={label}>
                   {t.quote.name} *
                 </label>
-                <input
-                  id={id('name')}
-                  ref={nameRef}
-                  className="field"
-                  autoComplete="name"
-                  value={form.name}
-                  onChange={(e) => set('name', e.target.value)}
-                  aria-invalid={nameError}
-                  aria-describedby={nameError ? id('name-err') : undefined}
-                />
-                {nameError && (
-                  <p id={id('name-err')} className="mt-1 text-sm font-medium text-red-700">
-                    {t.quote.required}
-                  </p>
-                )}
+                <input id={id('name')} ref={refs.name} className={fieldClass('name')} autoComplete="name" value={form.name} onChange={(e) => set('name', e.target.value)} {...a11y('name')} />
+                <FieldError field="name" />
               </div>
               <div>
                 <label htmlFor={id('phone')} className={label}>
@@ -184,21 +273,34 @@ export function Quote() {
                 </label>
                 <input
                   id={id('phone')}
-                  ref={phoneRef}
-                  className="field"
+                  ref={refs.phone}
+                  className={fieldClass('phone')}
                   type="tel"
                   autoComplete="tel"
+                  inputMode="tel"
                   dir="ltr"
                   value={form.phone}
                   onChange={(e) => set('phone', e.target.value)}
-                  aria-invalid={phoneError}
-                  aria-describedby={phoneError ? id('phone-err') : undefined}
+                  {...a11y('phone')}
                 />
-                {phoneError && (
-                  <p id={id('phone-err')} className="mt-1 text-sm font-medium text-red-700">
-                    {t.quote.required}
-                  </p>
-                )}
+                <FieldError field="phone" />
+              </div>
+              <div>
+                <label htmlFor={id('email')} className={label}>
+                  {t.quote.emailField}
+                </label>
+                <input
+                  id={id('email')}
+                  ref={refs.email}
+                  className={fieldClass('email')}
+                  type="email"
+                  autoComplete="email"
+                  dir="ltr"
+                  value={form.email}
+                  onChange={(e) => set('email', e.target.value)}
+                  {...a11y('email')}
+                />
+                <FieldError field="email" />
               </div>
               <div>
                 <label htmlFor={id('company')} className={label}>
@@ -206,7 +308,7 @@ export function Quote() {
                 </label>
                 <input id={id('company')} className="field" autoComplete="organization" value={form.company} onChange={(e) => set('company', e.target.value)} />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <label htmlFor={id('city')} className={label}>
                   {t.quote.city}
                 </label>
@@ -240,16 +342,7 @@ export function Quote() {
                   <label htmlFor={id(key)} className={label}>
                     {text}
                   </label>
-                  <input
-                    id={id(key)}
-                    className="field"
-                    type="number"
-                    min={0}
-                    inputMode="decimal"
-                    dir="ltr"
-                    value={form[key]}
-                    onChange={(e) => set(key, e.target.value)}
-                  />
+                  <input id={id(key)} className="field" type="number" min={0} inputMode="decimal" dir="ltr" value={form[key]} onChange={(e) => set(key, e.target.value)} />
                 </div>
               ))}
             </div>
@@ -290,19 +383,51 @@ export function Quote() {
               />
             </div>
 
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <button type="submit" className="btn btn-primary w-full sm:w-auto">
-                {site.whatsapp ? <MessageCircle className="h-5 w-5" aria-hidden="true" /> : <Mail className="h-5 w-5" aria-hidden="true" />}
-                {site.whatsapp ? t.quote.sendWhatsApp : t.quote.sendEmail}
-              </button>
-              {site.whatsapp && (
-                <button type="button" onClick={() => send('email')} className="btn btn-outline-dark w-full sm:w-auto">
-                  <Mail className="h-5 w-5" aria-hidden="true" />
-                  {t.quote.sendEmail}
-                </button>
-              )}
+            {/* Honeypot: hidden from people and screen readers, tempting for bots. */}
+            <div className="absolute -left-[9999px] h-0 w-0 overflow-hidden" aria-hidden="true">
+              <label>
+                Website
+                <input tabIndex={-1} autoComplete="off" value={form.website} onChange={(e) => set('website', e.target.value)} />
+              </label>
             </div>
-            <p className="mt-3 text-sm text-navy-500">{site.whatsapp ? t.quote.hintWhatsApp : t.quote.hintEmail}</p>
+
+            <div className="mt-5">
+              <label className="flex items-start gap-3 text-sm leading-relaxed text-navy-700">
+                <input
+                  ref={refs.consent}
+                  type="checkbox"
+                  checked={form.consent}
+                  onChange={(e) => set('consent', e.target.checked)}
+                  className="mt-1 h-5 w-5 shrink-0 accent-brand-500"
+                  {...a11y('consent')}
+                />
+                <span>
+                  {t.quote.consentPre}
+                  <Link to="/privacy" className="font-semibold text-brand-800 underline" target="_blank">
+                    {t.quote.consentLink}
+                  </Link>
+                  {t.quote.consentPost}
+                </span>
+              </label>
+              <FieldError field="consent" />
+            </div>
+
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <button type="submit" disabled={sending} aria-busy={sending} className="btn btn-primary w-full disabled:cursor-wait disabled:opacity-80 sm:w-auto">
+                {sending ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : <PrimaryIcon className="h-5 w-5" aria-hidden="true" />}
+                {sending ? t.quote.sending : channelLabel[primary]}
+              </button>
+              {secondary.map((channel) => {
+                const Icon = channelIcon[channel];
+                return (
+                  <button key={channel} type="button" disabled={sending} onClick={() => void send(channel)} className="btn btn-outline-dark w-full sm:w-auto">
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                    {channelLabel[channel]}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-3 text-sm text-navy-500">{hint}</p>
           </form>
         </Reveal>
       </div>

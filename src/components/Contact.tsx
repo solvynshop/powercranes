@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Clock, Mail, MapPin, MessageCircle, Phone, type LucideIcon } from 'lucide-react';
 import { mapsEmbed, mapsLink, phoneHref, site, waLink } from '@/lib/config';
 import { useI18n } from '@/i18n';
@@ -7,6 +8,7 @@ type Row = { icon: LucideIcon; title: string; lines: string[]; href?: string; lt
 
 export function Contact() {
   const { t } = useI18n();
+  const [mapReady, setMapReady] = useState(false);
 
   const rows: Row[] = [
     { icon: MapPin, title: t.contact.address, lines: site.address },
@@ -50,13 +52,22 @@ export function Contact() {
           </ul>
 
           <Reveal delay={100} className="flex flex-col overflow-hidden rounded-lg border border-white/10 bg-navy-900">
-            <iframe
-              title={t.contact.mapTitle}
-              src={mapsEmbed}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              className="h-72 w-full flex-1 border-0 lg:min-h-[22rem]"
-            />
+            <div className="relative h-72 w-full flex-1 lg:min-h-[22rem]">
+              {!mapReady && (
+                <div className="absolute inset-0 flex animate-pulse items-center justify-center bg-navy-800" role="status">
+                  <MapPin className="h-8 w-8 text-navy-500" aria-hidden="true" />
+                  <span className="sr-only">Loading map…</span>
+                </div>
+              )}
+              <iframe
+                title={t.contact.mapTitle}
+                src={mapsEmbed}
+                loading="lazy"
+                onLoad={() => setMapReady(true)}
+                referrerPolicy="no-referrer-when-downgrade"
+                className="absolute inset-0 h-full w-full border-0"
+              />
+            </div>
             <a href={mapsLink} target="_blank" rel="noopener noreferrer" className="btn btn-outline m-3 !py-2.5">
               <MapPin className="h-5 w-5" aria-hidden="true" />
               {t.contact.maps}

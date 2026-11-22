@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#08183C">
+<title>Page introuvable (404) | Power Cranes</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#fff;background:#08183C;
+background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:40px 40px}
+main{max-width:620px;text-align:center}
+img{width:min(300px,70vw);height:auto}
+.code{margin-top:18px;font-size:clamp(72px,18vw,120px);font-weight:800;line-height:1;color:#F89008;letter-spacing:-.02em}
+h1{margin-top:8px;font-size:clamp(24px,5vw,34px)}
+p{margin-top:12px;color:#C9D4EA;line-height:1.55;font-size:18px}
+.row{margin-top:28px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+a.b{display:inline-block;padding:13px 22px;border-radius:6px;font-weight:700;text-decoration:none;text-transform:uppercase;letter-spacing:.04em;font-size:15px}
+.p{background:#F89008;color:#040D25}.p:hover{background:#FFB23A}
+.o{border:2px solid rgba(255,255,255,.3);color:#fff}.o:hover{border-color:#F89008;color:#FFB23A}
+a:focus-visible{outline:3px solid #F89008;outline-offset:3px}
+</style>
+</head>
+<body>
+<main>
+  <img src="/brand/logo-dark.webp" width="900" height="368" alt="Power Cranes">
+  <div class="code" aria-hidden="true">404</div>
+  <h1 id="h">Page introuvable</h1>
+  <p id="p">Cette page n’existe pas ou a été déplacée. Revenez à l’accueil ou demandez directement votre devis de location de grue.</p>
+  <div class="row">
+    <a class="b p" id="home" href="/">Retour à l’accueil</a>
+    <a class="b o" id="quote" href="/#quote">Demander un devis</a>
+  </div>
+</main>
+<script>
+(function(){
+  var T={
+    fr:["Page introuvable","Cette page n’existe pas ou a été déplacée. Revenez à l’accueil ou demandez directement votre devis de location de grue.","Retour à l’accueil","Demander un devis","Page introuvable (404) | Power Cranes"],
+    en:["Page not found","This page doesn’t exist or has moved. Head back home or request your crane rental quote directly.","Back to home","Request a quote","Page not found (404) | Power Cranes"],
+    ar:["الصفحة غير موجودة","هذه الصفحة غير موجودة أو تم نقلها. عد إلى الصفحة الرئيسية أو اطلب عرض سعر لكراء الرافعة مباشرة.","العودة إلى الرئيسية","اطلب عرض سعر","الصفحة غير موجودة (404) | Power Cranes"]
+  };
+  var l="fr";
+  try{var s=localStorage.getItem("powercranes-lang");var prefs=s?[s]:(navigator.languages||[navigator.language]);
+    for(var i=0;i<prefs.length;i++){var b=String(prefs[i]).toLowerCase().split("-")[0];if(T[b]){l=b;break}}}catch(e){}
+  var d=T[l];document.documentElement.lang=l;document.documentElement.dir=l==="ar"?"rtl":"ltr";
+  document.getElementById("h").textContent=d[0];document.getElementById("p").textContent=d[1];
+  document.getElementById("home").textContent=d[2];document.getElementById("quote").textContent=d[3];document.title=d[4];
+})();
+</script>
+</body>
+</html>

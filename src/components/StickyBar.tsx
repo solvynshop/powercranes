@@ -1,6 +1,7 @@
 import { MessageCircle, Phone } from 'lucide-react';
 import { phoneHref, site, waLink } from '@/lib/config';
 import { useI18n } from '@/i18n';
+import { Link } from '@/lib/router';
 
 /** Thumb-reach actions pinned to the bottom of the screen on phones. */
 export function StickyBar() {
@@ -21,9 +22,9 @@ export function StickyBar() {
             {t.sticky.whatsapp}
           </a>
         )}
-        <a href="#quote" className="btn btn-primary flex-[1.4] !px-3 !py-2.5">
+        <Link to="/#quote" className="btn btn-primary flex-[1.4] !px-3 !py-2.5">
           {t.sticky.quote}
-        </a>
+        </Link>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { fleet, type CraneClass } from '@/lib/fleet';
-import { SAFETY_FACTOR, SLING_H, capacityCurve, evaluateLift, type LiftInput, type LiftResult } from '@/lib/lift';
+import { PIVOT_H, SAFETY_FACTOR, SLING_H, capacityCurve, evaluateLift, type LiftInput, type LiftResult } from '@/lib/lift';
 import { fmt, useI18n } from '@/i18n';
 import { useQuote } from '@/lib/quote';
 import { Reveal, SectionHead } from './Section';
@@ -74,57 +74,101 @@ function Slider({ label, unit, value, min, max, onChange }: SliderProps) {
 
 type SceneProps = { input: LiftInput; result: LiftResult; label: string; unitM: string; unitT: string };
 
-/* The carrier photo (public/brand/carrier-100t.webp, 900 × 336) faces right. Its real size is
-   ~13.2 m long; the boom foot sits at (11.9 %, 17 %) of the picture and the tyres touch the ground at 89.3 % of its height. */
-const CARRIER = { w: 13.2, ratio: 336 / 900, pivotX: 0.119, pivotY: 0.17, groundY: 0.893 };
+/* ------------------------------------------------------------------ */
+/* The crane, drawn in metres (rear of the carrier at x = 0, ground at */
+/* y = 0, up is negative) with the colours and layout of the logo:     */
+/* orange cab and boom, blue chassis, four axles, 100 t class.         */
+/* ------------------------------------------------------------------ */
+
+const PIVOT_X = 1.9; // boom foot, metres from the rear of the carrier
+const CAB_ANCHOR = { x: 3.1, y: -2.7 }; // where the luffing cylinder is fixed on the turret
+
+const WHEELS = [1.6, 3.1, 7.9, 9.4];
+
+function CraneBody() {
+  return (
+    <g>
+      <ellipse cx="6.2" cy="0.04" rx="6.8" ry="0.24" fill="#000" opacity="0.3" />
+      {/* chassis, outrigger boxes */}
+      <path d="M0.2 -2.0 H11.9 V-1.0 H0.2 Z" fill="url(#c-blue)" />
+      <path d="M0.2 -1.72 H11.9" stroke="#0B1F4D" strokeWidth="0.08" />
+      <rect x="0.3" y="-1.6" width="0.75" height="0.42" rx="0.06" fill="#F89008" />
+      <rect x="5.2" y="-1.6" width="1.1" height="0.42" rx="0.06" fill="#F89008" />
+      {/* turret: orange body, blue lower band, counterweight shading */}
+      <path d="M0.3 -2.0 V-3.9 Q0.3 -4.0 0.4 -4.0 H2.8 V-3.4 H5.6 V-2.0 Z" fill="url(#c-orange)" />
+      <path d="M0.3 -2.0 V-2.7 H5.6 V-2.0 Z" fill="url(#c-blue)" />
+      <rect x="0.3" y="-3.95" width="1.1" height="1.25" fill="#7A3F00" opacity="0.22" />
+      <path d="M2.8 -3.4 V-4.0" stroke="#8A4A00" strokeWidth="0.06" />
+      {/* operator cab */}
+      <path d="M3.1 -3.3 V-4.45 Q3.1 -4.6 3.25 -4.6 H4.95 Q5.15 -4.6 5.25 -4.4 L5.6 -3.5 V-3.3 Z" fill="url(#c-blue)" />
+      <path d="M3.4 -4.4 H4.85 L5.2 -3.55 H3.4 Z" fill="url(#c-glass)" />
+      {/* front cab */}
+      <path d="M8.3 -1.0 V-3.2 Q8.3 -3.7 8.8 -3.7 H11.0 Q11.4 -3.7 11.6 -3.35 L12.1 -2.4 Q12.2 -2.2 12.2 -1.9 V-1.0 Z" fill="url(#c-orange)" />
+      <path d="M8.3 -2.3 H12.2 V-1.0 H8.3 Z" fill="url(#c-blue)" />
+      <path d="M10.45 -3.55 H11.05 L11.8 -2.5 H10.45 Z" fill="url(#c-glass)" />
+      <path d="M8.7 -3.45 H10.3 V-2.5 H8.7 Z" fill="url(#c-glass)" />
+      <rect x="11.92" y="-2.0" width="0.26" height="0.18" rx="0.04" fill="#FFE9A8" />
+      <rect x="11.6" y="-1.25" width="0.7" height="0.25" rx="0.05" fill="#0B1226" />
+      {/* wheel arches and wheels */}
+      {WHEELS.map((x) => (
+        <circle key={`a${x}`} cx={x} cy="-0.7" r="0.84" fill="#0A1A44" />
+      ))}
+      {WHEELS.map((x) => (
+        <g key={x}>
+          <circle cx={x} cy="-0.7" r="0.7" fill="#0E1424" />
+          <circle cx={x} cy="-0.7" r="0.45" fill="#1F4FA8" />
+          <circle cx={x} cy="-0.7" r="0.3" fill="#143377" />
+          <circle cx={x} cy="-0.7" r="0.1" fill="#0B1226" />
+        </g>
+      ))}
+    </g>
+  );
+}
 
 function PlannerScene({ input, result, label, unitM, unitT }: SceneProps) {
-  const W = 720;
-  const H = 400;
-  const ground = 350;
-  const pivotX = 150;
+  const W = 760;
+  const H = 430;
+  const ground = 378;
   const { radius, height, load } = input;
 
   const L = result.boomNeeded;
   const rise = Math.sqrt(Math.max(L * L - radius * radius, 0));
+  const angleDeg = (Math.atan2(rise, radius) * 180) / Math.PI;
 
-  // px per metre, limited so the whole lift fits and the crane body stays on screen.
-  const s = Math.min((W - pivotX - 80) / (radius + 12), (ground - 36) / (height + SLING_H + 5), 14);
+  // px per metre: the whole lift (crane + load + wall) must fit, and the crane stays a readable size.
+  const widthM = PIVOT_X + Math.max(radius + 5, 10.2);
+  const s = Math.min((W - 40 - 82) / widthM, (ground - 30) / (height + SLING_H + 3.5), 22);
 
-  const imgW = CARRIER.w * s;
-  const imgH = imgW * CARRIER.ratio;
-  const imgX = pivotX - CARRIER.pivotX * imgW;
-  const imgY = ground - CARRIER.groundY * imgH;
-  const pivotY = imgY + CARRIER.pivotY * imgH;
-
+  const rearX = 24;
+  const pivotX = rearX + PIVOT_X * s;
+  const pivotY = ground - PIVOT_H * s;
   const tipX = pivotX + radius * s;
   const tipY = pivotY - rise * s;
   const ux = (tipX - pivotX) / (L * s);
   const uy = (tipY - pivotY) / (L * s);
-  // Boom as a tapered polygon (0.9 m at the foot, 0.45 m at the head).
-  const half0 = 0.45 * s;
-  const half1 = 0.22 * s;
-  const nx = -uy;
-  const ny = ux;
-  const pts = [
-    [pivotX + nx * half0, pivotY + ny * half0],
-    [tipX + nx * half1, tipY + ny * half1],
-    [tipX - nx * half1, tipY - ny * half1],
-    [pivotX - nx * half0, pivotY - ny * half0],
-  ]
-    .map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`)
-    .join(' ');
 
-  // Load hangs from the boom head: block, then slings, then the load itself.
+  // Luffing cylinder: from the turret to the underside of the boom, 28 % along it.
+  const anchor = { x: rearX + CAB_ANCHOR.x * s, y: ground + CAB_ANCHOR.y * s };
+  const att = {
+    x: pivotX + ux * L * s * 0.28 - uy * 0.5 * s,
+    y: pivotY + uy * L * s * 0.28 + ux * 0.5 * s,
+  };
+  const mid = { x: (anchor.x * 0.55 + att.x * 0.45), y: (anchor.y * 0.55 + att.y * 0.45) };
+
+  // Load hangs from the boom head: rope, hook block, slings, load.
   const topY = ground - height * s;
-  const loadH = Math.min(1.9 * s, 40);
-  const loadW = Math.min(3.2 * s, 70);
+  const loadH = Math.min(1.9 * s, 44);
+  const loadW = Math.min(3.2 * s, 76);
   const loadTop = topY - loadH;
   const blockY = Math.min(loadTop - 1.1 * s, loadTop - 6);
-  const wallX = tipX + 2.2 * s;
-  const wallW = Math.max(W - 72 - wallX, 24);
-  const dimX = W - 32;
+  const wallX = tipX + 2.4 * s;
+  const wallW = Math.max(W - 86 - wallX, 24);
+  const dimX = W - 46;
   const dimY = ground + 24;
+
+  // Telescopic boom: four sections, each a little slimmer than the one before.
+  const secEnds = [0, 0.3, 0.58, 0.82, 1];
+  const secH = [1.0, 0.84, 0.7, 0.56];
 
   const Pill = ({ x, y, text }: { x: number; y: number; text: string }) => (
     <g>
@@ -138,10 +182,18 @@ function PlannerScene({ input, result, label, unitM, unitT }: SceneProps) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="h-auto w-full" role="img" aria-label={label} dir="ltr">
       <defs>
-        <linearGradient id="boom-grad" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="c-orange" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#FFB23A" />
-          <stop offset="0.55" stopColor="#F89008" />
-          <stop offset="1" stopColor="#B85F00" />
+          <stop offset="0.6" stopColor="#F89008" />
+          <stop offset="1" stopColor="#C46A00" />
+        </linearGradient>
+        <linearGradient id="c-blue" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#2A5FC4" />
+          <stop offset="1" stopColor="#163A80" />
+        </linearGradient>
+        <linearGradient id="c-glass" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#7FA6E6" />
+          <stop offset="1" stopColor="#0F2147" />
         </linearGradient>
       </defs>
 
@@ -156,21 +208,43 @@ function PlannerScene({ input, result, label, unitM, unitT }: SceneProps) {
       <line x1={dimX - 5} y1={topY} x2={dimX + 5} y2={topY} stroke="#F89008" strokeWidth="1.5" />
       <Pill x={dimX - 6} y={(ground + topY) / 2} text={`H ${height} ${unitM}`} />
 
-      {/* Boom (drawn behind the carrier so the turret covers its foot) */}
-      <polygon points={pts} fill="url(#boom-grad)" stroke="#7A3F00" strokeWidth="1" strokeLinejoin="round" />
-      <circle cx={tipX} cy={tipY} r={Math.max(half1 * 1.25, 3)} fill="#08183C" stroke="#F89008" strokeWidth="1.5" />
+      {/* Luffing cylinder (cylinder + chrome rod), then the boom, behind the turret */}
+      <line x1={anchor.x} y1={anchor.y} x2={mid.x} y2={mid.y} stroke="#2B3552" strokeWidth={Math.max(0.3 * s, 3)} strokeLinecap="round" />
+      <line x1={mid.x} y1={mid.y} x2={att.x} y2={att.y} stroke="#C9D4EA" strokeWidth={Math.max(0.16 * s, 2)} strokeLinecap="round" />
+
+      <g transform={`translate(${pivotX} ${pivotY}) rotate(${-angleDeg})`}>
+        {secH.map((h, i) => {
+          const x0 = secEnds[i] * L * s - (i ? 0.25 * s : 0);
+          const x1 = secEnds[i + 1] * L * s;
+          return (
+            <g key={i}>
+              <rect x={x0} y={(-h / 2) * s} width={x1 - x0} height={h * s} rx={0.08 * s} fill="url(#c-orange)" stroke="#8A4A00" strokeWidth="0.8" />
+              <rect x={x0} y={(-h / 2) * s} width={Math.max(0.16 * s, 2)} height={h * s} fill="#163A80" />
+              <line x1={x0 + 0.3 * s} y1={(-h / 2) * s + 0.2 * s} x2={x1 - 0.3 * s} y2={(-h / 2) * s + 0.2 * s} stroke="#FFD28A" strokeWidth="1" opacity="0.7" />
+            </g>
+          );
+        })}
+        {/* boom head and sheave */}
+        <rect x={L * s - 0.25 * s} y={-0.42 * s} width={0.55 * s} height={0.84 * s} rx={0.18 * s} fill="#10296B" stroke="#F89008" strokeWidth="1.2" />
+        <circle cx={L * s} cy={0} r={Math.max(0.17 * s, 3)} fill="#F89008" stroke="#040D25" strokeWidth="1" />
+      </g>
 
       {/* Rope, hook block, slings and load */}
       <line x1={tipX} y1={tipY} x2={tipX} y2={blockY} stroke="#E8EDF8" strokeWidth="1.5" />
-      <rect x={tipX - 5} y={blockY} width="10" height="12" rx="2" fill="#D6342C" />
-      <path d={`M${tipX} ${blockY + 12}L${tipX - loadW / 2} ${loadTop}M${tipX} ${blockY + 12}L${tipX + loadW / 2} ${loadTop}`} stroke="#E8EDF8" strokeWidth="1" fill="none" />
-      <rect x={tipX - loadW / 2} y={loadTop} width={loadW} height={loadH} fill="#5C6F96" stroke="#E8EDF8" strokeWidth="1.5" />
+      <rect x={tipX - 6} y={blockY} width="12" height="14" rx="2" fill="#D6342C" stroke="#7E1712" strokeWidth="1" />
+      <path d={`M${tipX} ${blockY + 14}L${tipX - loadW / 2} ${loadTop}M${tipX} ${blockY + 14}L${tipX + loadW / 2} ${loadTop}`} stroke="#E8EDF8" strokeWidth="1" fill="none" />
+      <rect x={tipX - loadW / 2} y={loadTop} width={loadW} height={loadH} rx="2" fill="#5C6F96" stroke="#E8EDF8" strokeWidth="1.5" />
       <text x={tipX} y={loadTop + loadH / 2 + 4} textAnchor="middle" fontSize={Math.min(13, loadH * 0.5)} fontWeight="700" fill="#fff" fontFamily="'JetBrains Mono', monospace">
         {load} {unitT}
       </text>
 
-      {/* The real crane */}
-      <image href="/brand/carrier-100t.webp" x={imgX} y={imgY} width={imgW} height={imgH} preserveAspectRatio="xMidYMid meet" />
+      {/* The crane */}
+      <g transform={`translate(${rearX} ${ground}) scale(${s})`}>
+        <CraneBody />
+        {/* boom foot bracket, on top of the turret */}
+        <circle cx={PIVOT_X} cy={-PIVOT_H} r="0.3" fill="#10296B" stroke="#F89008" strokeWidth="0.1" />
+        <circle cx={PIVOT_X} cy={-PIVOT_H} r="0.1" fill="#F89008" />
+      </g>
 
       {/* Ground + radius dimension */}
       <line x1="0" y1={ground} x2={W} y2={ground} stroke="#3C5E9E" strokeWidth="2" />
@@ -272,6 +346,7 @@ export function LiftPlanner() {
 
             <div className="grid gap-4 md:grid-cols-2" aria-live="polite">
               <div className="rounded-lg border border-white/10 bg-navy-900/80 p-5">
+                <img src="/brand/crane-100t.webp" alt={t.hero.alt} width={1100} height={468} loading="lazy" decoding="async" className="mb-4 h-24 w-auto" />
                 {rec ? (
                   <>
                     <p className="caps font-mono text-xs font-semibold text-brand-400">{t.planner.recommended}</p>

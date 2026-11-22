@@ -1,24 +1,38 @@
 /**
- * Site-wide contact details. Edit this file to update the site.
- *
- * `phone` and `whatsapp` are intentionally EMPTY: the previous site showed a
- * placeholder number (+212 5 39 00 00 00). While these stay empty, every
- * call / WhatsApp button is hidden and quote requests go out by e-mail.
- * Fill them in and the buttons appear everywhere automatically.
+ * Site-wide company details. Edit this file to update the site everywhere.
+ * Source: the company letterhead (Engagement CNSS, Oct. 2026).
  */
 export const site = {
   name: 'Power Cranes',
   legalName: 'Power Cranes SARL AU',
   url: 'https://powercranesma.com',
-  email: 'contact@powercranesma.com',
+  email: 'info@powercranesma.com',
 
-  /** Display format, e.g. '+212 6 12 34 56 78'. Leave '' until you have the real number. */
-  phone: '',
-  /** Digits only, with country code, no "+": e.g. '212612345678'. Leave '' until ready. */
-  whatsapp: '',
+  /** Display format. */
+  phone: '+212 667 015 303',
+  /** Digits only, with country code, no "+". Leave '' to hide every WhatsApp button. */
+  whatsapp: '212667015303',
 
-  address: ['183 Avenue Prince Héritier', 'Centre Nrea RDC, Local N°15', 'Tanger-Médina, Maroc'],
+  address: ['183 Avenue Prince Héritier', 'Center Nrea, Bureau N°15', 'Tanger, Maroc'],
   mapQuery: '183 Avenue Prince Heritier, Tanger, Maroc',
+
+  /** Public business identifiers, shown in the legal notice. */
+  legal: {
+    manager: 'Soufiane Bakkali Kasmi',
+    rc: '147703 (Tanger)',
+    ice: '00346737700080',
+    if: '60267987',
+    tp: '50418438',
+  },
+
+  /**
+   * Optional integrations, set as environment variables (Vercel > Settings > Environment Variables):
+   *  VITE_FORM_ENDPOINT  a Formspree / Getform URL: quote requests are then delivered by e-mail
+   *                      without opening WhatsApp or the mail app.
+   *  VITE_GA_ID          a Google Analytics 4 id (G-XXXXXXXXXX): loaded only after cookie consent.
+   */
+  formEndpoint: (import.meta.env.VITE_FORM_ENDPOINT as string | undefined) ?? '',
+  gaId: (import.meta.env.VITE_GA_ID as string | undefined) ?? '',
 };
 
 export const phoneHref = site.phone ? `tel:${site.phone.replace(/[^\d+]/g, '')}` : '';

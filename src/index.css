@@ -119,37 +119,6 @@
   transform: none;
 }
 
-/*
- * Hero crane: the boom luffs (rotates) around the pivot while the hook block
- * counter-rotates by the same amount around the boom tip, so the load always
- * hangs vertically. Both animations share duration and easing.
- */
-@keyframes crane-luff {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(8deg);
-  }
-}
-@keyframes crane-counter {
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-  50% {
-    transform: rotate(-8deg);
-  }
-}
-.crane-luff {
-  transform-origin: 0 0;
-  animation: crane-luff 10s ease-in-out infinite;
-}
-.crane-counter {
-  transform-origin: 0 0;
-  animation: crane-counter 10s ease-in-out infinite;
-}
 
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -159,10 +128,6 @@
     opacity: 1;
     transform: none;
     transition: none;
-  }
-  .crane-luff,
-  .crane-counter {
-    animation: none;
   }
 }
 
@@ -200,4 +165,10 @@
 }
 .float-y { animation: float-y 6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .float-y { animation: none; } }
-html { scroll-padding-top: 5.5rem; }
+
+/* Perf: sections below the fold are not laid out or painted until they get close to the viewport. */
+main > section:not(#top) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+.float-y { will-change: transform; }

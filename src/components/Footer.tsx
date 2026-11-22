@@ -1,4 +1,6 @@
 import { ArrowUp } from 'lucide-react';
+import { OPEN_COOKIE_SETTINGS } from './CookieBanner';
+import { Link } from '@/lib/router';
 import { phoneHref, site } from '@/lib/config';
 import { navIds } from '@/lib/nav';
 import { useI18n } from '@/i18n';
@@ -21,9 +23,9 @@ export function Footer() {
           <ul className="mt-4 space-y-2">
             {navIds.map((id) => (
               <li key={id}>
-                <a href={`#${id}`} className="hover:text-white">
+                <Link to={`/#${id}`} className="hover:text-white">
                   {t.nav[id]}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -52,11 +54,24 @@ export function Footer() {
       </div>
 
       <div className="border-t border-white/10">
-        <div className="container-x flex flex-col items-center justify-between gap-3 py-5 text-sm sm:flex-row">
+        <div className="container-x flex flex-col items-center justify-between gap-3 py-5 text-sm md:flex-row">
           <p>
             © {new Date().getFullYear()} {site.legalName}. {t.footer.rights}
           </p>
-          <a href="#top" className="inline-flex items-center gap-2 hover:text-white">
+          <nav aria-label="Legal" className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
+            <Link to="/privacy" className="hover:text-white">
+              {t.footer.privacy}
+            </Link>
+            <Link to="/terms" className="hover:text-white">
+              {t.footer.terms}
+            </Link>
+            {site.gaId && (
+              <button type="button" onClick={() => window.dispatchEvent(new Event(OPEN_COOKIE_SETTINGS))} className="hover:text-white">
+                {t.cookie.manage}
+              </button>
+            )}
+          </nav>
+          <a href="#top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="inline-flex items-center gap-2 hover:text-white">
             {t.footer.top}
             <ArrowUp className="h-4 w-4" aria-hidden="true" />
           </a>

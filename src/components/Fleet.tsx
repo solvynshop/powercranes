@@ -17,14 +17,14 @@ export function Fleet() {
         <Reveal>
           <article className="grid overflow-hidden rounded-3xl border border-navy-100 bg-white shadow-card lg:grid-cols-[1.25fr_1fr]">
             <div className="blueprint relative flex items-center justify-center bg-navy-950 px-4 py-10 sm:px-10">
-              <div className="absolute left-1/2 top-1/2 h-2/3 w-3/4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-500/20 blur-[80px]" aria-hidden="true" />
+              <div className="absolute inset-0" style={{ background: 'radial-gradient(closest-side at 50% 50%, rgba(248,144,8,0.22), rgba(248,144,8,0) 100%)' }} aria-hidden="true" />
               <img
                 src="/brand/crane-100t.webp"
                 alt={t.hero.alt}
                 width={1100}
-                height={438}
+                height={468}
                 loading="lazy"
-                className="relative w-full max-w-xl drop-shadow-[0_25px_35px_rgba(0,0,0,0.5)]"
+                className="relative w-full max-w-xl"
               />
             </div>
 

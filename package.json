@@ -1,7 +1,7 @@
 {
-  "name": "vite-react-typescript-starter",
+  "name": "powercranes",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,10 +11,8 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.57.4",
-    "install": "^0.13.0",
+    "@vercel/analytics": "^1.5.0",
     "lucide-react": "^0.446.0",
-    "npm": "^12.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

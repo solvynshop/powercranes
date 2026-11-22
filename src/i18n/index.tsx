@@ -66,8 +66,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const root = document.documentElement;
     root.lang = lang;
     root.dir = dir;
-    document.title = dictionaries[lang].meta.title;
-    document.querySelector('meta[name="description"]')?.setAttribute('content', dictionaries[lang].meta.description);
+    // Cairo (Arabic) is only downloaded when someone actually reads the site in Arabic.
+    if (lang === 'ar' && !document.getElementById('font-cairo')) {
+      const link = document.createElement('link');
+      link.id = 'font-cairo';
+      link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap';
+      document.head.appendChild(link);
+    }
   }, [lang, dir]);
 
   const value = useMemo<I18nValue>(() => ({ lang, dir, t: dictionaries[lang], setLang }), [lang, dir, setLang]);
