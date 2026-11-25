@@ -4,6 +4,7 @@ import { LANGS, useI18n } from '@/i18n';
 import { useActiveSection } from '@/lib/hooks';
 import { navIds } from '@/lib/nav';
 import { Link, useRouter } from '@/lib/router';
+import { trackEvent } from '@/lib/track';
 import { Logo } from './Logo';
 
 /** Tracks "scrolled" (state, changes rarely) and drives the progress bar directly through a ref (no re-render). */
@@ -41,7 +42,10 @@ function LangSwitch({ className = '' }: { className?: string }) {
           type="button"
           lang={code}
           aria-pressed={lang === code}
-          onClick={() => setLang(code)}
+          onClick={() => {
+            setLang(code);
+            trackEvent('lang_switch', { to: code });
+          }}
           className={`rounded-full px-2.5 py-1 font-mono text-[11px] font-bold transition ${
             lang === code ? 'bg-white text-navy-950' : 'text-navy-200 hover:text-white'
           }`}
@@ -89,13 +93,13 @@ export function Navbar() {
               <Logo className="h-11 sm:h-12" />
             </Link>
 
-            <ul className="hidden items-center gap-1 lg:flex">
+            <ul className="hidden items-center gap-0.5 xl:flex">
               {navIds.map((id) => (
                 <li key={id}>
                   <Link
                     to={`/#${id}`}
                     aria-current={active === id ? 'true' : undefined}
-                    className={`rounded-full px-4 py-2 text-[15px] font-semibold transition-all duration-300 ${
+                    className={`whitespace-nowrap rounded-full px-3 py-2 text-[15px] font-semibold transition-all duration-300 ${
                       active === id ? 'bg-white/10 text-white' : 'text-navy-100 hover:bg-white/[0.06] hover:text-white'
                     }`}
                   >
@@ -112,7 +116,7 @@ export function Navbar() {
               </Link>
               <button
                 type="button"
-                className="glass flex h-10 w-10 items-center justify-center rounded-full text-white lg:hidden"
+                className="glass flex h-10 w-10 items-center justify-center rounded-full text-white xl:hidden"
                 aria-expanded={open}
                 aria-controls="mobile-nav"
                 aria-label={open ? t.nav.close : t.nav.menu}
@@ -131,7 +135,7 @@ export function Navbar() {
 
       <div
         id="mobile-nav"
-        className={`glass-dark fixed inset-0 z-40 overflow-y-auto pt-24 transition-all duration-500 lg:hidden ${
+        className={`glass-dark fixed inset-0 z-40 overflow-y-auto pt-24 transition-all duration-500 xl:hidden ${
           open ? 'visible opacity-100' : 'invisible opacity-0'
         }`}
         aria-hidden={!open}

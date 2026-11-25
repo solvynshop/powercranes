@@ -1,0 +1,21 @@
+[
+  {
+    "type": "image",
+    "src": "/gallery/01-tanger-med.webp",
+    "city": {
+      "fr": "Tanger-Med",
+      "en": "Tanger-Med",
+      "ar": "طنجة المتوسط"
+    },
+    "alt": {
+      "fr": "Grue mobile 100 t en action · Tanger-Med",
+      "en": "100 t mobile crane at work · Tanger-Med",
+      "ar": "رافعة متنقلة 100 طن أثناء العمل · طنجة المتوسط"
+    },
+    "caption": {
+      "fr": "Grue mobile 100 t en action · Tanger-Med",
+      "en": "100 t mobile crane at work · Tanger-Med",
+      "ar": "رافعة متنقلة 100 طن أثناء العمل · طنجة المتوسط"
+    }
+  }
+]

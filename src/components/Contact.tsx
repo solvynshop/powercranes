@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Clock, Mail, MapPin, MessageCircle, Phone, type LucideIcon } from 'lucide-react';
 import { mapsEmbed, mapsLink, phoneHref, site, waLink } from '@/lib/config';
 import { useI18n } from '@/i18n';
+import { trackEvent } from '@/lib/track';
 import { Reveal, SectionHead } from './Section';
 
 type Row = { icon: LucideIcon; title: string; lines: string[]; href?: string; ltr?: boolean };
@@ -22,7 +23,7 @@ export function Contact() {
     <section id="contact" className="relative overflow-hidden bg-navy-950 py-16 text-white sm:py-24">
       <div className="blueprint absolute inset-0" aria-hidden="true" />
       <div className="container-x relative">
-        <SectionHead index="09" tag={t.contact.tag} title={t.contact.title} tone="dark" />
+        <SectionHead index="10" tag={t.contact.tag} title={t.contact.title} tone="dark" />
 
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
           <ul className="space-y-3">
@@ -36,7 +37,7 @@ export function Contact() {
                     <p className="caps font-mono text-[11px] font-semibold text-brand-400">{row.title}</p>
                     {row.lines.map((line) =>
                       row.href ? (
-                        <a key={line} href={row.href} className="block text-lg font-semibold hover:text-brand-400" dir={row.ltr ? 'ltr' : undefined}>
+                        <a key={line} href={row.href} onClick={() => trackEvent(row.icon === Mail ? 'email_click' : row.icon === Phone ? 'phone_click' : 'whatsapp_click', { from: 'contact' })} className="block text-lg font-semibold hover:text-brand-400" dir={row.ltr ? 'ltr' : undefined}>
                           {line}
                         </a>
                       ) : (

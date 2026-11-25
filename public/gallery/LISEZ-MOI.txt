@@ -1,0 +1,26 @@
+GALERIE "REALISATIONS" / WORK GALLERY
+=====================================
+
+AJOUTER / ADD
+  1. Copier la photo ou la vidéo dans CE dossier (public/gallery).
+  2. La nommer :  NUMERO-VILLE.extension
+        01-tanger-med.jpg
+        02-casablanca.webp
+        03-rabat.mp4
+     - Le numéro donne l'ordre d'affichage (01 en premier).
+     - Villes connues (nom traduit automatiquement FR/EN/AR) :
+       tanger, tanger-med, casablanca, rabat, marrakech, agadir, fes
+       Autre ville : écrire son nom, ex. 04-oujda.jpg
+  3. Vidéo : image d'aperçu facultative  03-rabat-poster.jpg
+
+CHANGER / REPLACE  : remplacer le fichier par un autre du même nom.
+SUPPRIMER / DELETE : supprimer le fichier. Réordonner : changer les numéros.
+LEGENDES PERSONNALISEES (facultatif) : créer un fichier captions.json
+     { "01-tanger-med.jpg": { "fr": "Levage de charpente", "en": "Steel frame lift", "ar": "رفع هيكل معدني" } }
+
+POIDS CONSEILLÉ : photos 1600 px de large, moins de 400 Ko (squoosh.app) ; vidéos mp4 de 10 à 30 s, moins de 15 Mo.
+N'utiliser que de vraies photos des chantiers de Power Cranes.
+
+PUIS / THEN (PowerShell, dans le dossier du projet) :
+  npm run build           -> dossier dist/ à envoyer sur l'hébergement
+  git add -A; git commit -m "photos"; git push

@@ -1,10 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
 import { fr, type Dict } from './fr';
 import { en } from './en';
 import { ar } from './ar';
+import { useRouter } from '@/lib/router';
+import type { Lang } from '@/seo/langs';
 
-export type Lang = 'fr' | 'en' | 'ar';
+export type { Lang };
 
 export const LANGS: { code: Lang; label: string }[] = [
   { code: 'fr', label: 'FR' },
@@ -13,32 +15,6 @@ export const LANGS: { code: Lang; label: string }[] = [
 ];
 
 const dictionaries: Record<Lang, Dict> = { fr, en, ar };
-const STORAGE_KEY = 'powercranes-lang';
-
-const isLang = (value: unknown): value is Lang => value === 'fr' || value === 'en' || value === 'ar';
-
-/** First supported language among the device's preferred languages (fr-MA, ar-SA, en-US...). */
-function deviceLang(): Lang | null {
-  const prefs = typeof navigator === 'undefined' ? [] : navigator.languages?.length ? navigator.languages : [navigator.language];
-  for (const pref of prefs) {
-    const base = String(pref).toLowerCase().split('-')[0];
-    if (isLang(base)) return base;
-  }
-  return null;
-}
-
-/** ?lang=en in the URL wins, then the visitor's saved choice, then the device language, then French. */
-function initialLang(): Lang {
-  try {
-    const fromUrl = new URLSearchParams(window.location.search).get('lang');
-    if (isLang(fromUrl)) return fromUrl;
-    const saved = window.localStorage.getItem(STORAGE_KEY);
-    if (isLang(saved)) return saved;
-  } catch {
-    /* storage or URL access can be blocked: fall through to the device language */
-  }
-  return deviceLang() ?? 'fr';
-}
 
 type I18nValue = {
   lang: Lang;
@@ -49,18 +25,10 @@ type I18nValue = {
 
 const I18nContext = createContext<I18nValue>({ lang: 'fr', dir: 'ltr', t: fr, setLang: () => undefined });
 
+/** The language comes from the address (see the router): "/" French, "/en/" English, "/ar/" Arabic. */
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>(initialLang);
+  const { lang, switchLang } = useRouter();
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
-
-  const setLang = useCallback((next: Lang) => {
-    setLangState(next);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      /* ignore */
-    }
-  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -76,7 +44,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
   }, [lang, dir]);
 
-  const value = useMemo<I18nValue>(() => ({ lang, dir, t: dictionaries[lang], setLang }), [lang, dir, setLang]);
+  const value = useMemo<I18nValue>(() => ({ lang, dir, t: dictionaries[lang], setLang: switchLang }), [lang, dir, switchLang]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 

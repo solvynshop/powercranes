@@ -1,4 +1,4 @@
-# Apache / cPanel hosting: clean URLs for the single-page app + real 404 + caching.
+# Apache / cPanel hosting: every page is a real folder with its own index.html (see scripts/prerender.mjs).
 Options -MultiViews
 RewriteEngine On
 RewriteCond %{HTTPS} !=on
@@ -6,7 +6,6 @@ RewriteCond %{HTTP:X-Forwarded-Proto} !https
 RewriteCond %{HTTP_HOST} !^(localhost|127\.) [NC]
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-RewriteRule ^(privacy|terms|thank-you)/?$ /index.html [L]
 ErrorDocument 404 /404.html
 
 <IfModule mod_expires.c>

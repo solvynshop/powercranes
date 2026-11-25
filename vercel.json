@@ -1,9 +1,5 @@
 {
-  "rewrites": [
-    { "source": "/privacy", "destination": "/index.html" },
-    { "source": "/terms", "destination": "/index.html" },
-    { "source": "/thank-you", "destination": "/index.html" }
-  ],
+  "trailingSlash": true,
   "headers": [
     {
       "source": "/assets/(.*)",

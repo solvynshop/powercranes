@@ -8,11 +8,14 @@ import { Footer } from '@/components/Footer';
 import { StickyBar } from '@/components/StickyBar';
 import { CookieBanner } from '@/components/CookieBanner';
 import Home from '@/pages/Home';
+import { WhatsAppFab } from '@/components/WhatsAppFab';
+import { CITY_PATH } from '@/seo/cities';
 
 // Secondary pages are loaded on demand, so the home page stays as light as possible.
 const Legal = lazy(() => import('@/pages/Legal'));
 const Thanks = lazy(() => import('@/pages/Thanks'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
+const City = lazy(() => import('@/pages/City'));
 
 function PageFallback() {
   return (
@@ -34,15 +37,17 @@ function Routes() {
       return <Legal kind="terms" />;
     case '/thank-you':
       return <Thanks />;
-    default:
+    default: {
+      if (path.startsWith(`${CITY_PATH}/`)) return <City slug={path.slice(CITY_PATH.length + 1)} />;
       return <NotFound />;
+    }
   }
 }
 
 export default function App() {
   return (
-    <I18nProvider>
-      <RouterProvider>
+    <RouterProvider>
+      <I18nProvider>
         <QuoteProvider>
           <Navbar />
           <main id="main">
@@ -52,10 +57,11 @@ export default function App() {
           </main>
           <Footer />
           <StickyBar />
+          <WhatsAppFab />
           <CookieBanner />
           <Analytics />
         </QuoteProvider>
-      </RouterProvider>
-    </I18nProvider>
+      </I18nProvider>
+    </RouterProvider>
   );
 }

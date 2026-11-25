@@ -6,6 +6,8 @@ import { Process } from '@/components/Process';
 import { Sectors } from '@/components/Sectors';
 import { Coverage } from '@/components/Coverage';
 import { Safety } from '@/components/Safety';
+import { Faq } from '@/components/Faq';
+import { Gallery } from '@/components/Gallery';
 import { Quote } from '@/components/Quote';
 import { Contact } from '@/components/Contact';
 import { useI18n } from '@/i18n';
@@ -22,8 +24,10 @@ export default function Home() {
       <Services />
       <Process />
       <Sectors />
+      <Gallery />
       <Coverage />
       <Safety />
+      <Faq />
       <Quote />
       <Contact />
     </>

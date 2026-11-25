@@ -17,8 +17,9 @@ git add -A && git commit -m "v3" && git push
 Vercel redéploie automatiquement.
 
 ## Pages
-`/` accueil · `/privacy` confidentialité · `/terms` conditions · `/thank-you` après envoi du devis · 404 personnalisée (`public/404.html`).
-SEO : titres/descriptions par page (`src/lib/meta.ts`), `robots.txt`, `sitemap.xml`, image Open Graph, jeu de favicons, JSON-LD.
+Chaque page existe en 3 langues : `/` (FR), `/en/`, `/ar/`. Accueil, `/privacy/`, `/terms/`, `/thank-you/`, et une page par ville `/location-grue/<ville>/` (Tanger, Tanger-Med, Casablanca, Rabat, Marrakech, Agadir, Fès) + 404 personnalisée.
+Au premier passage, le visiteur est dirigé vers la langue de son téléphone (son choix manuel est mémorisé ; les robots ne sont jamais redirigés).
+SEO : `npm run build` génère un vrai fichier HTML par page et par langue (`scripts/prerender.mjs`) avec titre, description, canonical, hreflang, FAQ structurée et `sitemap.xml`. Ajouter une ville : `src/seo/cities.ts` + une phrase dans `cityNotes` (3 langues).
 
 ## Variables d'environnement (Vercel → Settings → Environment Variables)
 - `VITE_FORM_ENDPOINT` — URL Formspree/Getform : les demandes de devis arrivent par e-mail. Sans elle, repli WhatsApp / e-mail.
@@ -40,3 +41,6 @@ SEO : titres/descriptions par page (`src/lib/meta.ts`), `robots.txt`, `sitemap.x
 
 ## Offre affichée
 Grue mobile 100 t, location **longue durée uniquement (à partir de 3 mois)**, partout au Maroc.
+
+## Galerie « Réalisations » (photos / vidéos)
+Pour ajouter une photo : la copier dans `public/gallery/` en la nommant `NUMERO-VILLE.jpg` (ex. `01-tanger-med.jpg`, `02-casablanca.mp4`), puis `npm run build`. Les légendes FR/EN/AR, le lien de menu et les données Google sont générés automatiquement. Détails dans `public/gallery/LISEZ-MOI.txt`. La section reste masquée tant que le dossier est vide.

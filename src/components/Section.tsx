@@ -23,7 +23,8 @@ export function Reveal({ children, className = '', delay = 0, as: Tag = 'div' }:
 }
 
 type SectionHeadProps = {
-  index: string;
+  /** Section number; leave empty for sections that may be hidden. */
+  index?: string;
   tag: string;
   title: string;
   intro?: string;
@@ -36,8 +37,12 @@ export function SectionHead({ index, tag, title, intro, tone = 'light', classNam
   return (
     <Reveal className={`mb-10 max-w-3xl sm:mb-12 ${className}`}>
       <p className={`eyebrow ${dark ? 'text-brand-400' : 'text-brand-700'}`}>
-        <span>{index}</span>
-        <span aria-hidden="true">/</span>
+        {index && (
+          <>
+            <span>{index}</span>
+            <span aria-hidden="true">/</span>
+          </>
+        )}
         <span>{tag}</span>
       </p>
       <h2

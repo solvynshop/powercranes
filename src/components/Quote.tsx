@@ -4,6 +4,7 @@ import { fleet, fleetById } from '@/lib/fleet';
 import { mailLink, phoneHref, site, waLink } from '@/lib/config';
 import { useQuote } from '@/lib/quote';
 import { Link, useRouter } from '@/lib/router';
+import { trackEvent } from '@/lib/track';
 import { useI18n } from '@/i18n';
 import { Reveal, SectionHead } from './Section';
 
@@ -113,6 +114,7 @@ export function Quote() {
   };
 
   const finish = (via: Channel) => {
+    trackEvent('quote_submit', { via });
     setDraft(null);
     setForm(empty);
     setAttempted(false);
@@ -192,7 +194,7 @@ export function Quote() {
     <section id="quote" className="bg-paper py-16 sm:py-24">
       <div className="container-x grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-14">
         <div>
-          <SectionHead index="08" tag={t.quote.tag} title={t.quote.title} intro={t.quote.intro} className="!mb-8" />
+          <SectionHead index="09" tag={t.quote.tag} title={t.quote.title} intro={t.quote.intro} className="!mb-8" />
           <p className="caps mb-3 font-mono text-xs font-semibold text-navy-500">{t.quote.alt}</p>
           <ul className="space-y-3 text-lg font-semibold text-navy-900">
             {site.phone && (

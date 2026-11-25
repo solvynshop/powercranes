@@ -4,8 +4,10 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/gallery.mjs",
     "dev": "vite",
-    "build": "vite build",
+    "prebuild": "node scripts/gallery.mjs",
+    "build": "vite build && node scripts/prerender.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json"

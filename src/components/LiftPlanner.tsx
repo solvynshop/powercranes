@@ -1,3 +1,4 @@
+import { trackEvent } from '@/lib/track';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { fleet, type CraneClass } from '@/lib/fleet';
@@ -417,7 +418,10 @@ export function LiftPlanner() {
 
             <a
               href="#quote"
-              onClick={() => setDraft({ craneId: rec?.crane.id ?? '', ...input })}
+              onClick={() => {
+                setDraft({ craneId: rec?.crane.id ?? '', ...input });
+                trackEvent('planner_cta');
+              }}
               className="btn btn-primary w-full sm:w-auto"
             >
               {t.planner.cta}
